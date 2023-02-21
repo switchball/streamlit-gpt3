@@ -1,4 +1,7 @@
+import time
 import streamlit as st
+import pandas as pd
+
 
 st.set_page_config(
     page_title="GPT-3 Playground", layout="wide", initial_sidebar_state="auto",
@@ -9,8 +12,9 @@ st.info('✨ 支持多轮对话 😉')
 st.text("在下方文本框输入你的对话 \n点击发送后，稍等片刻，就会收到来自 GPT-3 的回复")
 
 # store chat as session state
+DEFAULT_CHAT_TEXT = "Human: Who are you?"
 if 'input_text_state' not in st.session_state:
-    st.session_state.input_text_state = "Human: Who are you?"
+    st.session_state.input_text_state = DEFAULT_CHAT_TEXT
 
 
 with st.spinner('Runing ...'):
@@ -19,6 +23,9 @@ with st.spinner('Runing ...'):
     st.session_state.input_text_state += '\nAI: <Respond>'
     st.session_state.input_text_state += '\nHuman: '
 
+if st.button('Reset'):
+    st.session_state.input_text_state = DEFAULT_CHAT_TEXT
+    
 with st.form("my_form"):
     txt = st.text_area('对话内容', key='input_text_state')
     temperature_val = st.slider("Temperature")
