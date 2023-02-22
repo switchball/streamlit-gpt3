@@ -57,7 +57,7 @@ if 'input_text_state' not in st.session_state:
 def after_submit():
     # Send text and waiting for respond
     with st.spinner('Runing ...'):
-        respond = completion(
+        respose = completion(
             model="text-ada-001",
             prompt=st.session_state.input_text_state,
             temperature=0.9,
@@ -67,7 +67,6 @@ def after_submit():
             presence_penalty=0.6,
             stop=[" Human:", " AI:"]
         )
-        time.sleep(2)
         st.write(response)
         answer = response['choices'][0]['text']
         st.write(answer)
