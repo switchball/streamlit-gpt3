@@ -3,6 +3,9 @@ import random
 import openai
 import streamlit as st
 import pandas as pd
+from transformers import GPT2Tokenizer
+
+
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -18,6 +21,12 @@ st.text("在下方文本框输入你的对话 \n点击发送后，稍等片刻�
 st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
 
 st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
+
+@st.cache_resource(ttl=86400):
+def get_tokenizer():
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    return tokenizer
+
 
 @st.cache_data(ttl=3600)
 def completion(
@@ -98,6 +107,9 @@ with st.form("my_form"):
     
     # When the input_text_state is bind to widget, its content cannot be modified by session api.
     txt = st.text_area('对话内容', key='input_text_state', height=800)
+    tokens = tokenizer.tokenize(txt)
+    token_number = len(tokens)
+    st.write('Token number:', token_number)
     if submitted:
         st.json(response, expanded=False)
         st.write("temperature", temperature_val, "checkbox", checkbox_val)
