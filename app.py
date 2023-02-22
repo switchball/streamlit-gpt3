@@ -16,9 +16,9 @@ st.text("在下方文本框输入你的对话 \n点击发送后，稍等片刻�
 
 st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
 
-st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 描述意图，概况 AI 的个性。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。', icon="✅")
+st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def completion(
         prompt, 
         model="text-davinci-003",
@@ -30,7 +30,7 @@ def completion(
         stop=[" Human:", " AI:"]
     ):
     print('completion', prompt)
-    with st.spinner('Running...'):
+    with st.spinner(text='Running...'):
         response = openai.Completion.create(
             model=model, prompt=prompt, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
             frequency_penalty=frequency_penalty, presence_penalty=presence_penalty, stop=stop
@@ -68,12 +68,14 @@ def after_submit():
     st.session_state.input_text_state += '\nHuman: '
     return response
 
-if st.button('预设1'):
-    st.session_state.input_text_state = DEFAULT_CHAT_TEXT
-if st.button('预设2'):
-    st.session_state.input_text_state = DEFAULT_CHAT_TEXT2
-if st.button('预设3'):
-    st.session_state.input_text_state = DEFAULT_CHAT_TEXT3
+with st.form(key='preset_form'):
+    st.write('一些预设的身份(identity)')
+    if st.form_submit_button(label='预设 1'):
+        st.session_state.input_text_state = DEFAULT_CHAT_TEXT
+    if st.form_submit_button(label='预设 2'):
+        st.session_state.input_text_state = DEFAULT_CHAT_TEXT2
+    if st.form_submit_button(label='预设 3'):
+        st.session_state.input_text_state = DEFAULT_CHAT_TEXT3
     
 with st.form("my_form"):
     # Every form must have a submit button.
