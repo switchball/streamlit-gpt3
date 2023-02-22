@@ -107,7 +107,7 @@ with st.form("my_form"):
     
     # When the input_text_state is bind to widget, its content cannot be modified by session api.
     txt = st.text_area('对话内容', key='input_text_state', height=800)
-    tokens = tokenizer.tokenize(txt)
+    tokens = get_tokenizer().tokenize(txt)
     token_number = len(tokens)
     st.write('Token number:', token_number)
     if submitted:
