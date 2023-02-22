@@ -17,7 +17,7 @@ st.text("在下方文本框输入你的对话 \n点击发送后，稍等片刻�
 @st.cache_data
 def completion(
         prompt, 
-        model="text-ada-001",
+        model="text-davinci-003",
         temperature=0.9,
         max_tokens=150,
         top_p=1,
@@ -35,19 +35,6 @@ def completion(
     print(response['choices'][0]['text'])
     return response
 
-if st.button('chat'):
-    response = completion(
-        model="text-ada-001",
-        prompt="以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\nHuman: 你好，你是谁？\nAI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？\nHuman: 告诉我3+5=?",
-        temperature=0.9,
-        max_tokens=150,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0.6,
-        stop=[" Human:", " AI:"]
-    )
-
-    st.write(response)
 
 # store chat as session state
 DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\nHuman: 你好，你是谁？\nAI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？\nHuman: "
@@ -56,22 +43,19 @@ if 'input_text_state' not in st.session_state:
 
 def after_submit():
     # Send text and waiting for respond
-    with st.spinner('Runing ...'):
-        response = completion(
-            model="text-ada-001",
-            prompt=st.session_state.input_text_state,
-            temperature=0.9,
-            max_tokens=150,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0.6,
-            stop=[" Human:", " AI:"]
-        )
-        st.write(response)
-        answer = response['choices'][0]['text']
-        st.write(answer)
-        st.session_state.input_text_state += '\nAI: ' + answer
-        st.session_state.input_text_state += '\nHuman: '
+    response = completion(
+        model="text-davinci-003",
+        prompt=st.session_state.input_text_state,
+        temperature=0.9,
+        max_tokens=150,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0.6,
+        stop=[" Human:", " AI:"]
+    )
+    answer = response['choices'][0]['text']
+    st.session_state.input_text_state += '\nAI: ' + answer
+    st.session_state.input_text_state += '\nHuman: '
     return response
 
 if st.button('Reset'):
@@ -81,10 +65,11 @@ with st.form("my_form"):
     # Every form must have a submit button.
     submitted = st.form_submit_button("发送")
     if submitted:
-        after_submit()
+        response = after_submit()
+        st.write(response)
     
     # When the input_text_state is bind to widget, its content cannot be modified by session api.
-    txt = st.text_area('对话内容', key='input_text_state')
+    txt = st.text_area('对话内容', key='input_text_state', height=800)
     temperature_val = st.slider("Temperature")
     checkbox_val = st.checkbox("Form checkbox")
     if submitted:
