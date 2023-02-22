@@ -50,17 +50,30 @@ if st.button('chat'):
     st.write(response)
 
 # store chat as session state
-DEFAULT_CHAT_TEXT = "Human: Who are you?"
+DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\nHuman: 你好，你是谁？\nAI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？\nHuman: "
 if 'input_text_state' not in st.session_state:
     st.session_state.input_text_state = DEFAULT_CHAT_TEXT
 
 def after_submit():
     # Send text and waiting for respond
     with st.spinner('Runing ...'):
+        respond = completion(
+            model="text-ada-001",
+            prompt=st.session_state.input_text_state,
+            temperature=0.9,
+            max_tokens=150,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0.6,
+            stop=[" Human:", " AI:"]
+        )
         time.sleep(2)
-        st.write('Sentiment:', st.session_state.input_text_state)
-        st.session_state.input_text_state += '\nAI: <Respond>'
+        st.write(response)
+        answer = response['choices'][0]['text']
+        st.write(answer)
+        st.session_state.input_text_state += '\nAI: ' + answer
         st.session_state.input_text_state += '\nHuman: '
+    return response
 
 if st.button('Reset'):
     st.session_state.input_text_state = DEFAULT_CHAT_TEXT
