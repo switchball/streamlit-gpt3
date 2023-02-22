@@ -31,8 +31,8 @@ def completion(
         stop=[" Human:", " AI:"]
     ):
     print('completion', prompt)
-    hint_texts = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待回复中 ...', '正在激活神经网络 ...']
-    with st.spinner(text=random.choice(hint_texts):
+    hint_texts = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
+    with st.spinner(text=random.choice(hint_texts)):
         response = openai.Completion.create(
             model=model, prompt=prompt, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
             frequency_penalty=frequency_penalty, presence_penalty=presence_penalty, stop=stop
