@@ -83,7 +83,7 @@ with st.form(key='preset_form'):
 with st.form("my_form"):
     model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
     temperature_val = st.sidebar.slider("Temperature", 0.0, 2.0, 0.9, step=0.1)
-    max_tokens_val = st.siderbar.select_slider("Max Tokens", options=(256, 512, 1024), value=256) 
+    max_tokens_val = st.sidebar.select_slider("Max Tokens", options=(256, 512, 1024), value=256) 
     checkbox_val = st.sidebar.checkbox("Form checkbox")
     # Every form must have a submit button.
     submitted = st.form_submit_button("发送")
