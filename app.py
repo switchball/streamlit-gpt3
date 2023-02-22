@@ -54,7 +54,8 @@ def after_submit():
         stop=[" Human:", " AI:"]
     )
     answer = response['choices'][0]['text']
-    st.session_state.input_text_state += '\nAI: ' + answer
+    # TODO: should check if answer starts with '\nAI:'
+    st.session_state.input_text_state += answer
     st.session_state.input_text_state += '\nHuman: '
     return response
 
@@ -66,13 +67,13 @@ with st.form("my_form"):
     submitted = st.form_submit_button("发送")
     if submitted:
         response = after_submit()
-        st.write(response)
     
     # When the input_text_state is bind to widget, its content cannot be modified by session api.
     txt = st.text_area('对话内容', key='input_text_state', height=800)
     temperature_val = st.slider("Temperature")
     checkbox_val = st.checkbox("Form checkbox")
     if submitted:
+        st.write(response)
         st.write("temperature", temperature_val, "checkbox", checkbox_val, 'text', txt)
 
 """---"""
