@@ -39,6 +39,9 @@ def completion(
     print(response['choices'][0]['text'])
     return response
 
+# Available Models
+LANGUAGE_MODELS = ['text-davinci-003', 'text-curie-001', 'text-babbage-001', 'text-ada-001']
+CODEX_MODELS = ['code-davinci-002', 'code-cushman-001']
 
 # store chat as session state
 DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\nHuman: 你好，你是谁？\nAI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？\nHuman: "
@@ -50,13 +53,13 @@ DEFAULT_CHAT_TEXT3 = "Merlisa 是一名画家，生活艺术家，喜欢大笑�
 if 'input_text_state' not in st.session_state:
     st.session_state.input_text_state = DEFAULT_CHAT_TEXT
 
-def after_submit():
+def after_submit(model, temperature, max_tokens):
     # Send text and waiting for respond
     response = completion(
-        model="text-davinci-003",
+        model=model,
         prompt=st.session_state.input_text_state,
-        temperature=0.9,
-        max_tokens=150,
+        temperature=temperature,
+        max_tokens=max_tokens,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0.6,
@@ -78,17 +81,19 @@ with st.form(key='preset_form'):
         st.session_state.input_text_state = DEFAULT_CHAT_TEXT3
     
 with st.form("my_form"):
+    model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
+    temperature_val = st.sidebar.slider("Temperature", 0, 2, 0.9, step=0.1)
+    max_tokens_val = st.siderbar.select_slider("Max Tokens", options=(256, 512, 1024), 256) 
+    checkbox_val = st.sidebar.checkbox("Form checkbox")
     # Every form must have a submit button.
     submitted = st.form_submit_button("发送")
     if submitted:
-        response = after_submit()
+        response = after_submit(model_val, temperature_val, max_tokens_val)
     
     # When the input_text_state is bind to widget, its content cannot be modified by session api.
     txt = st.text_area('对话内容', key='input_text_state', height=800)
-    temperature_val = st.slider("Temperature")
-    checkbox_val = st.checkbox("Form checkbox")
     if submitted:
-        st.write(response)
-        st.write("temperature", temperature_val, "checkbox", checkbox_val, 'text', txt)
+        st.json(response, expanded=False)
+        st.write("temperature", temperature_val, "checkbox", checkbox_val)
 
 """---"""
