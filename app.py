@@ -1,4 +1,5 @@
 import time
+import random
 import openai
 import streamlit as st
 import pandas as pd
@@ -30,7 +31,8 @@ def completion(
         stop=[" Human:", " AI:"]
     ):
     print('completion', prompt)
-    with st.spinner(text='Running...'):
+    hint_texts = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待回复中 ...', '正在激活神经网络 ...']
+    with st.spinner(text=random.choice(hint_texts):
         response = openai.Completion.create(
             model=model, prompt=prompt, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
             frequency_penalty=frequency_penalty, presence_penalty=presence_penalty, stop=stop
@@ -73,12 +75,16 @@ def after_submit(model, temperature, max_tokens):
 
 with st.form(key='preset_form'):
     st.write('一些预设的身份(identity)')
-    if st.form_submit_button(label='预设 1'):
-        st.session_state.input_text_state = DEFAULT_CHAT_TEXT
-    if st.form_submit_button(label='预设 2'):
-        st.session_state.input_text_state = DEFAULT_CHAT_TEXT2
-    if st.form_submit_button(label='预设 3'):
-        st.session_state.input_text_state = DEFAULT_CHAT_TEXT3
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.form_submit_button(label='预设 1'):
+            st.session_state.input_text_state = DEFAULT_CHAT_TEXT
+    with col2:
+        if st.form_submit_button(label='预设 2'):
+            st.session_state.input_text_state = DEFAULT_CHAT_TEXT2
+    with col3:
+        if st.form_submit_button(label='预设 3'):
+            st.session_state.input_text_state = DEFAULT_CHAT_TEXT3
     
 with st.form("my_form"):
     model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
