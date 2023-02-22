@@ -1,6 +1,9 @@
 import time
+import openai
 import streamlit as st
 import pandas as pd
+
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 
 st.set_page_config(
@@ -10,6 +13,41 @@ st.set_page_config(
 st.title("GPT-3 你问我答")
 st.info('✨ 支持多轮对话 😉')
 st.text("在下方文本框输入你的对话 \n点击发送后，稍等片刻，就会收到来自 GPT-3 的回复")
+
+@st.cache_data
+def completion(
+        prompt, 
+        model="text-ada-001",
+        temperature=0.9,
+        max_tokens=150,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0.6,
+        stop=[" Human:", " AI:"]
+    ):
+    print('completion', prompt)
+    with st.spinner('Running...'):
+        response = openai.Completion.create(
+            model=model, prompt=prompt, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
+            frequency_penalty=frequency_penalty, presence_penalty=presence_penalty, stop=stop
+        )
+    print('completion finished.')
+    print(response['choices'][0]['text'])
+    return response
+
+if st.button('chat'):
+    response = completion(
+        model="text-ada-001",
+        prompt="以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\nHuman: 你好，你是谁？\nAI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？\nHuman: 告诉我3+5=?",
+        temperature=0.9,
+        max_tokens=150,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0.6,
+        stop=[" Human:", " AI:"]
+    )
+
+    st.write(response)
 
 # store chat as session state
 DEFAULT_CHAT_TEXT = "Human: Who are you?"
