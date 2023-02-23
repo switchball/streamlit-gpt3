@@ -13,10 +13,13 @@ class TokenCounter:
         current_time = time.time()
         interval_time = int(current_time / self.interval)
         self.pv[interval_time] += 1
+        self.calls[interval_time] += 0
+        self.tokens[interval_time] += 0
 
     def collect(self, tokens=1):
         current_time = time.time()
         interval_time = int(current_time / self.interval)
+        self.pv[interval_time] += 0
         self.calls[interval_time] += 1
         self.tokens[interval_time] += tokens
 
