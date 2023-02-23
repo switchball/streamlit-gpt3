@@ -5,6 +5,7 @@ import streamlit as st
 import pandas as pd
 from transformers import GPT2Tokenizer
 
+from collect import TokenCounter
 
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -21,6 +22,12 @@ st.text("在下方文本框输入你的对话 \n点击发送后，稍等片刻�
 st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
 
 st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
+
+@st.cache_resource
+def get_token_counter():
+    # if the definition of TokenCounter changes, the app need to reboot.
+    tc = TokenCounter(interval=900)
+    return tc
 
 @st.cache_resource(ttl=86400)
 def get_tokenizer():
@@ -80,6 +87,10 @@ def after_submit(model, temperature, max_tokens):
     # TODO: should check if answer starts with '\nAI:'
     st.session_state.input_text_state += answer
     st.session_state.input_text_state += '\nHuman: '
+
+    # Collect usage
+    tc = get_token_counter()
+    tc.collect(tokens=response['usage']['total_tokens'])
     return response
 
 with st.form(key='preset_form'):
@@ -115,3 +126,9 @@ with st.form("my_form"):
         st.write("temperature", temperature_val, "checkbox", checkbox_val)
 
 """---"""
+tc = get_token_counter()
+if st.button('Add page view'):
+    tc.page_view()
+
+st.write(tc.summary())
+
