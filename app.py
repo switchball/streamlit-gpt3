@@ -34,6 +34,17 @@ def get_tokenizer():
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
     return tokenizer
 
+def wait(delay, reason=""):
+    st.write(delay)
+    if delay <= 5:
+        return
+    end = time.time() + delay
+    for t in range(int(delay)):
+        with st.spinner(text=f"{reason} 预计等待时间 {round(end - time.time())} 秒"):
+            time.sleep(random.uniform(2, 7))
+        if time.time() > end:
+            break
+
 
 @st.cache_data(ttl=3600)
 def completion(
@@ -71,7 +82,18 @@ DEFAULT_CHAT_TEXT3 = "Merlisa 是一名画家，生活艺术家，喜欢大笑�
 if 'input_text_state' not in st.session_state:
     st.session_state.input_text_state = DEFAULT_CHAT_TEXT
 
+if 'user' not in st.session_state:
+    st.session_state['user'] = 'new user'
+    get_token_counter().page_view()
+
 def after_submit(model, temperature, max_tokens):
+    # Queue by prompt length and max_tokens
+    token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
+    x = token_number / 512
+    delay = 4 * x * x - 3
+    delay += 4 * x * (max_tokens / 512 - 1)
+    wait(delay, "前方排队中...")
+
     # Send text and waiting for respond
     response = completion(
         model=model,
@@ -126,9 +148,6 @@ with st.form("my_form"):
         st.write("temperature", temperature_val, "checkbox", checkbox_val)
 
 """---"""
-tc = get_token_counter()
-if st.button('Add page view'):
-    tc.page_view()
 
-st.write(tc.summary())
+st.write(get_token_counter().summary())
 
