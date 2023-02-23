@@ -35,7 +35,6 @@ def get_tokenizer():
     return tokenizer
 
 def wait(delay, reason=""):
-    st.write(delay)
     if delay <= 5:
         return
     end = time.time() + delay
@@ -132,7 +131,6 @@ with st.form("my_form"):
     model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
     temperature_val = st.sidebar.slider("Temperature", 0.0, 2.0, 0.9, step=0.1)
     max_tokens_val = st.sidebar.select_slider("Max Tokens", options=(256, 512, 1024), value=256) 
-    checkbox_val = st.sidebar.checkbox("Form checkbox")
     # Every form must have a submit button.
     submitted = st.form_submit_button("发送")
     if submitted:
@@ -142,10 +140,10 @@ with st.form("my_form"):
     txt = st.text_area('对话内容', key='input_text_state', height=800)
     tokens = get_tokenizer().tokenize(txt)
     token_number = len(tokens)
-    st.write('Token number:', token_number)
+    st.write('全文的 Token 数：', token_number, ' （约等于字数，GPT-3 响应时间与 Token 数成正比）')
     if submitted:
         st.json(response, expanded=False)
-        st.write("temperature", temperature_val, "checkbox", checkbox_val)
+        # st.write("temperature", temperature_val)
 
 """---"""
 
