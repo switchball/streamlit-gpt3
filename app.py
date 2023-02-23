@@ -3,6 +3,7 @@ import random
 import openai
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 from transformers import GPT2Tokenizer
 
 from collect import TokenCounter
@@ -147,5 +148,12 @@ with st.form("my_form"):
 
 """---"""
 
-st.write(get_token_counter().summary())
+with st.expander("访问统计"):
+    pv_stats, call_stats, token_stats = get_token_counter().summary()
 
+    tab1, tab2, tab3 = st.tabs(["Session View", "Request Count", "Token Count"])
+    df = pd.DataFrame(pv_stats.items(), columns=['time', 'pv'])
+    fig = px.line(df, x="time", y="pv", title='Page View')
+    tab1.plotly_chart(fig)
+    tab2.write(call_stats)
+    tab3.write(token_stats)
