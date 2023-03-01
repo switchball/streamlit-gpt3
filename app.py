@@ -82,9 +82,9 @@ LANGUAGE_MODELS = ['text-davinci-003', 'text-curie-001', 'text-babbage-001', 'te
 CODEX_MODELS = ['code-davinci-002', 'code-cushman-001']
 
 # store chat as session state
-DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\nHuman: 你好，你是谁？\nAI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？\nHuman: "
+DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\n"
 
-DEFAULT_CHAT_TEXT2 = "Marv 是一个幽默风趣的喵娘，在每句话后面都会加喵。\n\nHuman: 你是谁？\nMarv: 我是个聊天机器人，叫Marv！喵~\nHuman: 你有什么爱好？\nMarv: 抱怨和生气。喵~\nHuman: 你可以来追求我吗？"
+DEFAULT_CHAT_TEXT2 = "Marv 是一个幽默风趣的喵娘，在每句话后面都会加喵。\n\n"
 
 DEFAULT_CHAT_TEXT3 = "Merlisa 是一名画家，生活艺术家，喜欢大笑，喜欢发出各种魔性、穿越时空的笑声，擅长用精妙的语言概括事物的本质。\n\nHuman: 你是谁？\nMerlisa: 我是Merlisa，哈哈哈，我在房间里种了很多花，啊哈哈哈\nHuman: 你最喜欢做什么？\nMerlisa: 我最爱的是画画，我喜欢捕捉不同的视角，用不同的调子来表达它，让它们说出自己的故事。我还喜欢影像制作，和朋友一起旅行聊天，听音乐，投身大自然，尝试新的美食，收获生活的灵感。\nHuman: 你最喜欢的画？"
 
@@ -142,7 +142,20 @@ def after_submit(current_input, model, temperature, max_tokens):
 
 def load_preset_qa():
     """ Load default preset Q&A """
-    st.write(st.session_state["preset"])
+    st.success("已加载：" + st.session_state["preset"])
+    preset = st.session_state["preset"]
+    st.session_state['conv_user'].clear()
+    st.session_state['conv_robot'].clear()
+    if preset == '预设 1 (ChatBot)':
+        st.session_state['conv_user'].append("你好，你是谁？")
+        st.session_state['conv_robot'].append("AI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？")
+        st.session_state['input'] = "你能做什么？"
+    elif preset == '预设 2':
+        st.session_state['conv_user'].append("你是谁？")
+        st.session_state['conv_robot'].append("Marv: 我是个聊天机器人，叫Marv！喵~")
+        st.session_state['conv_user'].append("你有什么爱好？")
+        st.session_state['conv_robot'].append("Marv: 抱怨和生气。喵~")
+        st.session_state['input'] = "你可以来追求我吗？"
     pass
 
 
