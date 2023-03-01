@@ -99,7 +99,7 @@ if 'user' not in st.session_state:
 
 if 'seed' not in st.session_state:
     st.session_state['seed'] = random.randint(0, 1000)
-    seed = st.session_state['seed']
+seed = st.session_state['seed']
 
 def after_submit(current_input, model, temperature, max_tokens):
     # Append current_input to input_text_state
