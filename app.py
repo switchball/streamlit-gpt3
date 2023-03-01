@@ -140,7 +140,14 @@ def after_submit(current_input, model, temperature, max_tokens):
     return response
 
 
+def load_preset_qa():
+    """ Load default preset Q&A """
+    st.write(st.session_state["preset"])
+    pass
+
+
 def append_to_input_text():
+    """ Restore input_text_state via chat history """
     if st.session_state.conv_robot:
         st.session_state.input_text_state += '\nHuman: '
         for i in range(len(st.session_state.conv_robot)):
@@ -150,6 +157,7 @@ def append_to_input_text():
 
 
 def show_conversation_dialog():
+    """ Render the conversation dialogs """
     if st.session_state.conv_robot:
         for i in reversed(range(len(st.session_state.conv_robot))):
             message(st.session_state["conv_robot"][i], key=str(i), seed=seed)
@@ -163,7 +171,7 @@ preset_identity_map = {
     '预设 4 (IT)': DEFAULT_CHAT_TEXT4,
     '自定义': ""
 }
-prompt_id = st.selectbox('预设身份的提示词', options=preset_identity_map.keys(), index=0)
+prompt_id = st.selectbox('预设身份的提示词', options=preset_identity_map.keys(), index=0, on_change=load_preset_qa, key="preset")
 _prompt_text = preset_identity_map[prompt_id]
 prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
                             label_visibility='collapsed', key='prompt_1', disabled=(_prompt_text != ''))
