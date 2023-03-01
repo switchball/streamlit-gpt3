@@ -87,11 +87,20 @@ DEFAULT_CHAT_TEXT4 = "你是一名经验丰富的IT工程师，会用具体的�
 if 'input_text_state' not in st.session_state:
     st.session_state.input_text_state = DEFAULT_CHAT_TEXT
 
+if 'conv_user' not in st.session_state:
+    st.session_state.conv_user = []
+
+if 'conv_robot' not in st.session_state:
+    st.session_state.conv_robot = []
+
 if 'user' not in st.session_state:
     st.session_state['user'] = 'new user'
     get_token_counter().page_view()
 
-def after_submit(model, temperature, max_tokens):
+def after_submit(current_input, model, temperature, max_tokens):
+    # Append current_input to input_text_state
+    st.session_state.input_text_state += current_input
+
     # Queue by prompt length and max_tokens
     token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
     x = token_number / 512
@@ -121,6 +130,13 @@ def after_submit(model, temperature, max_tokens):
     return response
 
 
+def show_conversation_dialog():
+    if st.session_state.conv_robot:
+        for i in reversed(range(len(st.session_state.conv_robot))):
+            message(st.session_state["conv_robot"][i], key=str(i))
+            message(st.session_state['conv_user'][i], is_user=True, key=str(i) + '_user')
+
+
 preset_identity_map = {
     '预设 1 (ChatBot)': DEFAULT_CHAT_TEXT,
     '预设 2': DEFAULT_CHAT_TEXT2, 
@@ -136,16 +152,28 @@ st.session_state.input_text_state = prompt_text
 
     
 with st.form("my_form"):
+    col_icon, col_text, col_btn = st.columns((1, 10, 2))
+    col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{"lorelei"}/svg?seed={42}" alt="avatar" />""", unsafe_allow_html=True)
+    input_text = col_text.text_input("You: "," Hello Mr chatbot, how was your day? ", key="input", label_visibility="collapsed")
+
     model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
     temperature_val = st.sidebar.slider("Temperature", 0.0, 2.0, 0.9, step=0.1)
     max_tokens_val = st.sidebar.select_slider("Max Tokens", options=(256, 512, 1024), value=256) 
     # Every form must have a submit button.
-    submitted = st.form_submit_button("发送")
+    submitted = col_btn.form_submit_button("发送")
     if submitted:
-        response = after_submit(model_val, temperature_val, max_tokens_val)
+        response = after_submit(input_text, model_val, temperature_val, max_tokens_val)
+        answer = response['choices'][0]['text']
+        st.session_state.conv_user.append(input_text)
+        st.session_state.conv_robot.append(answer)
     
+    show_conversation_dialog()
+
     # When the input_text_state is bind to widget, its content cannot be modified by session api.
-    txt = st.text_area('对话内容', key='input_text_state', height=800)
+    with st.expander(""):
+        st.json(st.session_state.conv_robot, expanded=False)
+        st.json(st.session_state.conv_user, expanded=False)
+        txt = st.text_area('对话内容', key='input_text_state', height=800)
     tokens = get_tokenizer().tokenize(txt)
     token_number = len(tokens)
     st.write('全文的 Token 数：', token_number, ' （约等于字数，GPT-3 响应时间与 Token 数成正比）')
