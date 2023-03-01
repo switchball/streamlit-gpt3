@@ -27,6 +27,14 @@ st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需�
 
 st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
 
+st.write('''<style>
+[data-testid="column"] {
+    width: calc(33.3333% - 1rem) !important;
+    flex: 1 1 calc(33.3333% - 1rem) !important;
+    min-width: calc(33% - 1rem) !important;
+}
+</style>''', unsafe_allow_html=True)
+
 @st.cache_resource
 def get_token_counter():
     # if the definition of TokenCounter changes, the app need to reboot.
@@ -146,8 +154,8 @@ def append_to_input_text():
 def show_conversation_dialog():
     if st.session_state.conv_robot:
         for i in reversed(range(len(st.session_state.conv_robot))):
-            message(st.session_state["conv_robot"][i], key=str(i))
-            message(st.session_state['conv_user'][i], is_user=True, key=str(i) + '_user')
+            message(st.session_state["conv_robot"][i], key=str(i), seed=seed)
+            message(st.session_state['conv_user'][i], is_user=True, key=str(i) + '_user', seed=seed)
 
 
 preset_identity_map = {
