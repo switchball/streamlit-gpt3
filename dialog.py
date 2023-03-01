@@ -62,7 +62,7 @@ def message(msg: str,
     else:
         _, col_text, col_icon = st.columns((4, 10, 1))
     col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{avatar_style}/svg?seed={seed}" alt="avatar" />""", unsafe_allow_html=True)
-    if len(msg) <= 35:
+    if len(msg) <= 15:
         col_text.text_input("Message", msg, key=key, disabled=True, label_visibility='collapsed')
     else:
         col_text.markdown(msg)

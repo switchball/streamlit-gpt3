@@ -29,9 +29,7 @@ st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 
 
 st.write('''<style>
 [data-testid="column"] {
-    width: calc(33.3333% - 1rem) !important;
-    flex: 1 1 calc(33.3333% - 1rem) !important;
-    min-width: calc(33% - 1rem) !important;
+    min-width: 1rem !important;
 }
 </style>''', unsafe_allow_html=True)
 
