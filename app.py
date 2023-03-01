@@ -97,6 +97,10 @@ if 'user' not in st.session_state:
     st.session_state['user'] = 'new user'
     get_token_counter().page_view()
 
+if 'seed' not in st.session_state:
+    st.session_state['seed'] = random.randint(0, 1000)
+    seed = st.session_state['seed']
+
 def after_submit(current_input, model, temperature, max_tokens):
     # Append current_input to input_text_state
     st.session_state.input_text_state += current_input
@@ -130,6 +134,15 @@ def after_submit(current_input, model, temperature, max_tokens):
     return response
 
 
+def append_to_input_text():
+    if st.session_state.conv_robot:
+        st.session_state.input_text_state += '\nHuman: '
+        for i in range(len(st.session_state.conv_robot)):
+            st.session_state.input_text_state += st.session_state['conv_user'][i]
+            st.session_state.input_text_state += st.session_state["conv_robot"][i]
+            st.session_state.input_text_state += '\nHuman: '
+
+
 def show_conversation_dialog():
     if st.session_state.conv_robot:
         for i in reversed(range(len(st.session_state.conv_robot))):
@@ -149,11 +162,11 @@ _prompt_text = preset_identity_map[prompt_id]
 prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
                             label_visibility='collapsed', key='prompt_1', disabled=(_prompt_text != ''))
 st.session_state.input_text_state = prompt_text
-
+append_to_input_text()
     
 with st.form("my_form"):
     col_icon, col_text, col_btn = st.columns((1, 10, 2))
-    col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{"lorelei"}/svg?seed={42}" alt="avatar" />""", unsafe_allow_html=True)
+    col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{"lorelei"}/svg?seed={seed}" alt="avatar" />""", unsafe_allow_html=True)
     input_text = col_text.text_input("You: "," Hello Mr chatbot, how was your day? ", key="input", label_visibility="collapsed")
 
     model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
