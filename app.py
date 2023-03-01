@@ -6,7 +6,10 @@ import pandas as pd
 import plotly.express as px
 from transformers import GPT2Tokenizer
 
+# from streamlit_chat import message  # pip install streamlit-chat
+
 from collect import TokenCounter
+from dialog import message
 
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -79,6 +82,8 @@ DEFAULT_CHAT_TEXT2 = "Marv 是一个幽默风趣的喵娘，在每句话后面�
 
 DEFAULT_CHAT_TEXT3 = "Merlisa 是一名画家，生活艺术家，喜欢大笑，喜欢发出各种魔性、穿越时空的笑声，擅长用精妙的语言概括事物的本质。\n\nHuman: 你是谁？\nMerlisa: 我是Merlisa，哈哈哈，我在房间里种了很多花，啊哈哈哈\nHuman: 你最喜欢做什么？\nMerlisa: 我最爱的是画画，我喜欢捕捉不同的视角，用不同的调子来表达它，让它们说出自己的故事。我还喜欢影像制作，和朋友一起旅行聊天，听音乐，投身大自然，尝试新的美食，收获生活的灵感。\nHuman: 你最喜欢的画？"
 
+DEFAULT_CHAT_TEXT4 = "你是一名经验丰富的IT工程师，会用具体的代码和详尽的解释来回答问题。\n\n"
+
 if 'input_text_state' not in st.session_state:
     st.session_state.input_text_state = DEFAULT_CHAT_TEXT
 
@@ -115,18 +120,20 @@ def after_submit(model, temperature, max_tokens):
     tc.collect(tokens=response['usage']['total_tokens'])
     return response
 
-with st.form(key='preset_form'):
-    st.write('一些预设的身份(identity)')
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.form_submit_button(label='预设 1'):
-            st.session_state.input_text_state = DEFAULT_CHAT_TEXT
-    with col2:
-        if st.form_submit_button(label='预设 2'):
-            st.session_state.input_text_state = DEFAULT_CHAT_TEXT2
-    with col3:
-        if st.form_submit_button(label='预设 3'):
-            st.session_state.input_text_state = DEFAULT_CHAT_TEXT3
+
+preset_identity_map = {
+    '预设 1 (ChatBot)': DEFAULT_CHAT_TEXT,
+    '预设 2': DEFAULT_CHAT_TEXT2, 
+    '预设 3': DEFAULT_CHAT_TEXT3, 
+    '预设 4 (IT)': DEFAULT_CHAT_TEXT4,
+    '自定义': ""
+}
+prompt_id = st.selectbox('预设身份的提示词', options=preset_identity_map.keys(), index=0)
+_prompt_text = preset_identity_map[prompt_id]
+prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
+                            label_visibility='collapsed', key='prompt_1', disabled=(_prompt_text != ''))
+st.session_state.input_text_state = prompt_text
+
     
 with st.form("my_form"):
     model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
