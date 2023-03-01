@@ -194,7 +194,7 @@ append_to_input_text()
 with st.form("my_form"):
     col_icon, col_text, col_btn = st.columns((1, 10, 2))
     col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{"lorelei"}/svg?seed={seed}" alt="avatar" />""", unsafe_allow_html=True)
-    input_text = col_text.text_input("You: "," Hello Mr chatbot, how was your day? ", key="input", label_visibility="collapsed")
+    input_text = col_text.text_input("You: ", "", key="input", label_visibility="collapsed")
 
     model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
     temperature_val = st.sidebar.slider("Temperature", 0.0, 2.0, 0.9, step=0.1)
