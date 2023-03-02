@@ -66,6 +66,7 @@ def completion(
         presence_penalty=0.6,
         stop=[" Human:", " AI:"]
     ):
+    """ Text completion """
     print('completion', prompt)
     hint_texts = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
     with st.spinner(text=random.choice(hint_texts)):
@@ -77,8 +78,29 @@ def completion(
     print(response['choices'][0]['text'])
     return response
 
+
+@st.cache_data(ttl=3600)
+def chat_completion(
+    message_list,
+    model="gpt-3.5-turbo",
+    temperature=0.9,
+    max_tokens=256,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0.6
+    ):
+    """ Chat completion """
+    hint_texts = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
+    with st.spinner(text=random.choice(hint_texts)):
+        response = openai.ChatCompletion.create(
+            model=model, messages=message_list, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
+            frequency_penalty=frequency_penalty, presence_penalty=presence_penalty
+        )
+    print(response['choices'][0]['message']['content'])
+    return response
+
 # Available Models
-LANGUAGE_MODELS = ['text-davinci-003', 'text-curie-001', 'text-babbage-001', 'text-ada-001']
+LANGUAGE_MODELS = ['gpt-3.5-turbo', 'text-davinci-003', 'text-curie-001', 'text-babbage-001', 'text-ada-001']
 CODEX_MODELS = ['code-davinci-002', 'code-cushman-001']
 
 # store chat as session state
@@ -119,25 +141,48 @@ def after_submit(current_input, model, temperature, max_tokens):
     wait(delay, "前方排队中...")
 
     # Send text and waiting for respond
-    response = completion(
-        model=model,
-        prompt=st.session_state.input_text_state,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0.6,
-        stop=[" Human:", " AI:"]
-    )
-    answer = response['choices'][0]['text']
-    # TODO: should check if answer starts with '\nAI:'
-    st.session_state.input_text_state += answer
-    st.session_state.input_text_state += '\nHuman: '
+    if 'gpt' in model:
+        message_list = []
+        # Add system prompt
+        if st.session_state['prompt_system']:
+            message_list.append({"role": "system", "content": st.session_state["prompt_system"]})
+        # Add history conversations
+        for conv_user, conv_robot in zip(st.session_state['conv_user'], st.session_state['conv_robot']):
+            message_list.append({"role": "user", "content": conv_user})
+            message_list.append({"role": "assistant", "content": conv_robot})
+        # Add current user input
+        message_list.append({"role": "user", "content": current_input})
+        response = chat_completion(
+            message_list=message_list,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0.6
+        )
+        answer = response['choices'][0]['message']['content']
+        st.session_state.input_text_state += answer
+    else:
+        response = completion(
+            model=model,
+            prompt=st.session_state.input_text_state,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0.6,
+            stop=[" Human:", " AI:"]
+        )
+        answer = response['choices'][0]['text']
+        # TODO: should check if answer starts with '\nAI:'
+        st.session_state.input_text_state += answer
+        st.session_state.input_text_state += '\nHuman: '
 
     # Collect usage
     tc = get_token_counter()
     tc.collect(tokens=response['usage']['total_tokens'])
-    return response
+    return response, answer
 
 
 def load_preset_qa():
@@ -187,7 +232,7 @@ preset_identity_map = {
 prompt_id = st.selectbox('预设身份的提示词', options=preset_identity_map.keys(), index=0, on_change=load_preset_qa, key="preset")
 _prompt_text = preset_identity_map[prompt_id]
 prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
-                            label_visibility='collapsed', key='prompt_1', disabled=(_prompt_text != ''))
+                            label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
 st.session_state.input_text_state = prompt_text
 append_to_input_text()
     
@@ -202,8 +247,7 @@ with st.form("my_form"):
     # Every form must have a submit button.
     submitted = col_btn.form_submit_button("💬")
     if submitted:
-        response = after_submit(input_text, model_val, temperature_val, max_tokens_val)
-        answer = response['choices'][0]['text']
+        response, answer = after_submit(input_text, model_val, temperature_val, max_tokens_val)
         st.session_state.conv_user.append(input_text)
         st.session_state.conv_robot.append(answer)
     
@@ -216,7 +260,7 @@ with st.form("my_form"):
         txt = st.text_area('对话内容', key='input_text_state', height=800)
     tokens = get_tokenizer().tokenize(txt)
     token_number = len(tokens)
-    st.write('全文的 Token 数：', token_number, ' （约等于字数，GPT-3 响应时间与 Token 数成正比）')
+    st.write('全文的 Token 数：', token_number, ' （最大 Token 数：`4096`）')
     if submitted:
         st.json(response, expanded=False)
         # st.write("temperature", temperature_val)
