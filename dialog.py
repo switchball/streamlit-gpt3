@@ -30,7 +30,8 @@ def message(msg: str,
             is_user: Optional[bool] = False, 
             avatar_style: Optional[str] = None,
             seed: Optional[Union[int, str]] = 42,
-            key: Optional[str] = None):
+            key: Optional[str] = None,
+            on_click = None):
     """
     Creates a new instance of streamlit-chat component
 
@@ -51,6 +52,8 @@ def message(msg: str,
         An optional key that uniquely identifies this component. If this is
         None, and the component's arguments are changed, the component will
         be re-mounted in the Streamlit frontend and lose its current state.
+    on_click: WidgetCallback
+        Callback function when message button is clicked
 
     Returns: None
     """
@@ -58,11 +61,17 @@ def message(msg: str,
         avatar_style = "lorelei" if is_user else "bottts"
     
     if is_user:
-        col_icon, col_text, _ = st.columns((1, 10, 4))
+        col_icon, col_text, col_action, _ = st.columns((1, 10, 1.5, 2))
     else:
-        _, col_text, col_icon = st.columns((4, 10, 1))
+        _, col_action, col_text, col_icon = st.columns((2, 1.5, 10, 1))
     col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{avatar_style}/svg?seed={seed}" alt="avatar" style="max-height: 2rem;"/>""", unsafe_allow_html=True)
     if len(msg) <= 15:
         col_text.text_input("Message", msg, key=key, disabled=True, label_visibility='collapsed')
     else:
         col_text.markdown(msg)
+    if is_user:
+        if on_click:
+            col_action.form_submit_button("✏️", on_click=on_click)     # edit
+    else:
+        if on_click:
+            col_action.form_submit_button("↩️", on_click=on_click, help='撤回当前消息，可编辑后重新发送')     # revoke

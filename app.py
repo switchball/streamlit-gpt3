@@ -213,12 +213,21 @@ def append_to_input_text():
             st.session_state.input_text_state += '\nHuman: '
 
 
-def show_conversation_dialog():
+def show_conversation_dialog(rollback_fn):
     """ Render the conversation dialogs """
     if st.session_state.conv_robot:
-        for i in reversed(range(len(st.session_state.conv_robot))):
-            message(st.session_state["conv_robot"][i], key=str(i), seed=seed)
+        num = len(st.session_state.conv_robot)
+        for i in reversed(range(num)):
+            message(st.session_state["conv_robot"][i], key=str(i), seed=seed, on_click=(rollback_fn if i == num - 1 else None))
             message(st.session_state['conv_user'][i], is_user=True, key=str(i) + '_user', seed=seed)
+
+def rollback():
+    # 移除最新的一轮对话
+    st.session_state['conv_robot'].pop()
+    user_input = st.session_state['conv_user'].pop()
+    st.write('robot invoke', user_input)
+    st.session_state['input'] = user_input
+
 
 preset_identity_map = {
     '预设 1 (ChatBot)': DEFAULT_CHAT_TEXT,
@@ -246,13 +255,12 @@ with st.form("my_form"):
     max_tokens_val = st.sidebar.select_slider("Max Tokens", options=(256, 512, 1024), value=256) 
     # Every form must have a submit button.
     submitted = col_btn.form_submit_button("💬")
-    col_btn.form_submit_button("⏪", on_click=revoke)
     if submitted:
         response, answer = after_submit(input_text, model_val, temperature_val, max_tokens_val)
         st.session_state.conv_user.append(input_text)
         st.session_state.conv_robot.append(answer)
     
-    show_conversation_dialog()
+    show_conversation_dialog(rollback_fn=rollback)
 
     # When the input_text_state is bind to widget, its content cannot be modified by session api.
     with st.expander(""):
