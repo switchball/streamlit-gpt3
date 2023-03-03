@@ -6,8 +6,8 @@ import pandas as pd
 import plotly.express as px
 from transformers import GPT2Tokenizer
 
-# from streamlit_chat import message  # pip install streamlit-chat
 
+from prompt import PROMPTS, get_prompt_by_preset_id
 from collect import TokenCounter
 from dialog import message
 
@@ -136,8 +136,8 @@ def after_submit(current_input, model, temperature, max_tokens):
     # Queue by prompt length and max_tokens
     token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
     x = token_number / 512
-    delay = 4 * x * x - 3
-    delay += 4 * x * (max_tokens / 512 - 1)
+    delay = 2 * x * x - 3
+    delay += 2 * x * (max_tokens / 512 - 1)
     wait(delay, "前方排队中...")
 
     # Send text and waiting for respond
@@ -190,17 +190,15 @@ def load_preset_qa():
     preset = st.session_state.get("preset", '预设 1 (ChatBot)')
     st.session_state['conv_user'].clear()
     st.session_state['conv_robot'].clear()
-    if preset == '预设 1 (ChatBot)':
-        st.session_state['conv_user'].append("你好，你是谁？")
-        st.session_state['conv_robot'].append("AI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？")
-        st.session_state['input'] = "你能做什么？"
-    elif preset == '预设 2':
-        st.session_state['conv_user'].append("你是谁？")
-        st.session_state['conv_robot'].append("Marv: 我是个聊天机器人，叫Marv！喵~")
-        st.session_state['conv_user'].append("你有什么爱好？")
-        st.session_state['conv_robot'].append("Marv: 抱怨和生气。喵~")
-        st.session_state['input'] = "你可以来追求我吗？"
-    pass
+    # load prompt message into conversations
+    for p in PROMPTS:
+        if preset == p['preset']:
+            st.session_state['input'] = p.get('input', '')
+            for message in p['message']:
+                if message['role'] == 'user':
+                    st.session_state['conv_user'].append(message['content'])
+                elif message['role'] == 'assistant':
+                    st.session_state['conv_robot'].append(message['content'])
 
 
 def append_to_input_text():
@@ -229,17 +227,12 @@ def rollback():
     st.session_state['input'] = user_input
 
 
-preset_identity_map = {
-    '预设 1 (ChatBot)': DEFAULT_CHAT_TEXT,
-    '预设 2': DEFAULT_CHAT_TEXT2, 
-    '预设 3': DEFAULT_CHAT_TEXT3, 
-    '预设 4 (IT)': DEFAULT_CHAT_TEXT4,
-    '自定义': ""
-}
+preset_id_options = [p["preset"] for p in PROMPTS]
+preset_id_options.append("自定义")
 if 'preset' not in st.session_state:
     load_preset_qa()
-prompt_id = st.selectbox('预设身份的提示词', options=preset_identity_map.keys(), index=0, on_change=load_preset_qa, key="preset")
-_prompt_text = preset_identity_map[prompt_id]
+prompt_id = st.selectbox('预设身份的提示词', options=preset_id_options, index=0, on_change=load_preset_qa, key="preset")
+_prompt_text = get_prompt_by_preset_id(prompt_id)
 prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
                             label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
 st.session_state.input_text_state = prompt_text
