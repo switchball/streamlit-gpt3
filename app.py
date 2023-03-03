@@ -68,8 +68,7 @@ def completion(
     ):
     """ Text completion """
     print('completion', prompt)
-    hint_texts = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
-    with st.spinner(text=random.choice(hint_texts)):
+    with st.spinner(text=random.choice(HINT_TEXTS)):
         response = openai.Completion.create(
             model=model, prompt=prompt, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
             frequency_penalty=frequency_penalty, presence_penalty=presence_penalty, stop=stop
@@ -90,8 +89,7 @@ def chat_completion(
     presence_penalty=0.6
     ):
     """ Chat completion """
-    hint_texts = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
-    with st.spinner(text=random.choice(hint_texts)):
+    with st.spinner(text=random.choice(HINT_TEXTS)):
         response = openai.ChatCompletion.create(
             model=model, messages=message_list, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
             frequency_penalty=frequency_penalty, presence_penalty=presence_penalty
@@ -102,6 +100,8 @@ def chat_completion(
 # Available Models
 LANGUAGE_MODELS = ['gpt-3.5-turbo', 'text-davinci-003', 'text-curie-001', 'text-babbage-001', 'text-ada-001']
 CODEX_MODELS = ['code-davinci-002', 'code-cushman-001']
+
+HINT_TEXTS = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
 
 # store chat as session state
 DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\n"
@@ -187,8 +187,7 @@ def after_submit(current_input, model, temperature, max_tokens):
 
 def load_preset_qa():
     """ Load default preset Q&A """
-    st.success("已加载：" + st.session_state["preset"])
-    preset = st.session_state["preset"]
+    preset = st.session_state.get("preset", '预设 1 (ChatBot)')
     st.session_state['conv_user'].clear()
     st.session_state['conv_robot'].clear()
     if preset == '预设 1 (ChatBot)':
@@ -221,7 +220,6 @@ def show_conversation_dialog():
             message(st.session_state["conv_robot"][i], key=str(i), seed=seed)
             message(st.session_state['conv_user'][i], is_user=True, key=str(i) + '_user', seed=seed)
 
-
 preset_identity_map = {
     '预设 1 (ChatBot)': DEFAULT_CHAT_TEXT,
     '预设 2': DEFAULT_CHAT_TEXT2, 
@@ -229,6 +227,8 @@ preset_identity_map = {
     '预设 4 (IT)': DEFAULT_CHAT_TEXT4,
     '自定义': ""
 }
+if 'preset' not in st.session_state:
+    load_preset_qa()
 prompt_id = st.selectbox('预设身份的提示词', options=preset_identity_map.keys(), index=0, on_change=load_preset_qa, key="preset")
 _prompt_text = preset_identity_map[prompt_id]
 prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
@@ -246,6 +246,7 @@ with st.form("my_form"):
     max_tokens_val = st.sidebar.select_slider("Max Tokens", options=(256, 512, 1024), value=256) 
     # Every form must have a submit button.
     submitted = col_btn.form_submit_button("💬")
+    col_btn.form_submit_button("⏪", on_click=revoke)
     if submitted:
         response, answer = after_submit(input_text, model_val, temperature_val, max_tokens_val)
         st.session_state.conv_user.append(input_text)
