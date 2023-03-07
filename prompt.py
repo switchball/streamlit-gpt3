@@ -22,6 +22,15 @@ PROMPTS = [
         "input": "你想问什么喵？"
     },
     {
+        "preset": "英文翻译 + 总结摘要 (Translate & Summary)",
+        "prompt": "translate following text to Chinese, the text will be given one by one, format like 内容：<中文翻译> \n总结：<Tl;dr of the text>",
+        "message": [
+            {"role": "user", "content": "In the Northern Hemisphere, water goes down the drain counterclockwise, while in the Southern Hemisphere it goes down clockwise due to the Coriolis effect."},
+            {"role": "assistant", "content": "内容：在北半球，水从下水道流出呈逆时针方向，而在南半球，则是顺时针方向，这是由于科氏效应造成的。\n\n总结：在不同半球，水流下水道的方向是相反的，这是因为科氏效应导致的。"},
+        ],
+        "input": "<English text here>"
+    },
+    {
         "preset": "心理健康顾问",
         "prompt": "欢迎来到心理健康顾问。我可以帮助您处理情绪、压力、焦虑和其他心理健康问题。",
         "message": [
