@@ -225,7 +225,7 @@ def show_edit_dialog():
                 # 加载上一次AI回复的内容
                 st.session_state['edit_answer'] = st.session_state["conv_robot"][-1]
                 st.text_area('对话内容', key='edit_answer', height=800)
-                st.form_submit_button("📝 确认修改", onclick=edit_answer)
+                st.form_submit_button("📝 确认修改", on_click=edit_answer)
     else:
         st.warning("无法编辑！对话不存在")
 
