@@ -220,12 +220,12 @@ def show_conversation_dialog(rollback_fn):
 def show_edit_dialog():
     """ Show dialog that edits AI answer """
     if len(st.session_state["conv_robot"]) > 0:
-        with st.expander("手动编辑上一次AI回复的内容"):
+        with st.expander("手动编辑上一次AI回复的内容", expanded=True):
             with st.form("edit_form"):
                 # 加载上一次AI回复的内容
                 st.session_state['edit_answer'] = st.session_state["conv_robot"][-1]
-                st.text_area('对话内容', key='edit_answer', height=800)
                 st.form_submit_button("📝 确认修改", on_click=edit_answer)
+                st.text_area('对话内容', key='edit_answer', height=800)
     else:
         st.warning("无法编辑！对话不存在")
 
