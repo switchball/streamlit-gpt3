@@ -225,7 +225,7 @@ def show_edit_dialog():
                 # 加载上一次AI回复的内容
                 st.session_state['edit_answer'] = st.session_state["conv_robot"][-1]
                 st.text_area('对话内容', key='edit_answer', height=800)
-                col_btn.form_submit_button("edit", onclick=edit_answer)
+                st.form_submit_button("📝 确认修改", onclick=edit_answer)
     else:
         st.warning("无法编辑！对话不存在")
 
@@ -255,7 +255,7 @@ prompt_text = st.sidebar.text_area("Enter Prompt", value=_prompt_text, placehold
                             label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
 st.session_state.input_text_state = prompt_text
 append_to_input_text()
-need_edit_answer = st.button("编辑AI的回答（高级功能）")
+need_edit_answer = st.sidebar.button("编辑AI的回答（高级功能）")
 if need_edit_answer:
     show_edit_dialog()
     
