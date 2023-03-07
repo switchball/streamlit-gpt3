@@ -20,12 +20,10 @@ st.set_page_config(
 )
 
 st.title("GPT-3 你问我答")
-st.info('✨ 支持多轮对话 😉')
-st.text("在下方文本框输入你的对话 \n点击 \"💬\" 后，稍等片刻，就会收到来自 GPT-3 的回复")
+st.text("在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n点击 \"💬\" 后，稍等片刻，就会收到来自 GPT-3 的回复")
 
-st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
-
-st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
+# st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
+# st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
 
 st.write('''<style>
 [data-testid="column"] {
@@ -231,9 +229,9 @@ preset_id_options = [p["preset"] for p in PROMPTS]
 preset_id_options.append("自定义")
 if 'preset' not in st.session_state:
     load_preset_qa()
-prompt_id = st.selectbox('预设身份的提示词', options=preset_id_options, index=0, on_change=load_preset_qa, key="preset")
+prompt_id = st.sidebar.selectbox('预设身份的提示词', options=preset_id_options, index=0, on_change=load_preset_qa, key="preset")
 _prompt_text = get_prompt_by_preset_id(prompt_id)
-prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
+prompt_text = st.sidebar.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
                             label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
 st.session_state.input_text_state = prompt_text
 append_to_input_text()
@@ -244,8 +242,8 @@ with st.form("my_form"):
     input_text = col_text.text_input("You: ", "", key="input", label_visibility="collapsed")
 
     model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
-    temperature_val = st.sidebar.slider("Temperature", 0.0, 2.0, 0.9, step=0.1)
-    max_tokens_val = st.sidebar.select_slider("Max Tokens", options=(256, 512, 1024), value=256) 
+    temperature_val = st.sidebar.slider("Temperature", 0.0, 2.0, 0.9, step=0.05)
+    max_tokens_val = st.sidebar.select_slider("Max Tokens", options=(256, 512, 1024), value=512) 
     # Every form must have a submit button.
     submitted = col_btn.form_submit_button("💬")
     if submitted:
