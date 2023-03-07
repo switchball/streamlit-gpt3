@@ -133,9 +133,9 @@ def after_submit(current_input, model, temperature, max_tokens):
 
     # Queue by prompt length and max_tokens
     token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
-    x = token_number / 512
+    x = token_number / 1024
     delay = 2 * x * x - 3
-    delay += 2 * x * (max_tokens / 512 - 1)
+    delay += 2 * x * (max_tokens / 1024 - 1)
     wait(delay, "前方排队中...")
 
     # Send text and waiting for respond
@@ -217,6 +217,26 @@ def show_conversation_dialog(rollback_fn):
             message(st.session_state["conv_robot"][i], key=str(i), seed=seed, on_click=(rollback_fn if i == num - 1 else None))
             message(st.session_state['conv_user'][i], is_user=True, key=str(i) + '_user', seed=seed)
 
+def show_edit_dialog():
+    """ Show dialog that edits AI answer """
+    if len(st.session_state["conv_robot"]) > 0:
+        with st.expander("手动编辑上一次AI回复的内容"):
+            with st.form("edit_form"):
+                # 加载上一次AI回复的内容
+                st.session_state['edit_answer'] = st.session_state["conv_robot"][-1]
+                st.text_area('对话内容', key='edit_answer', height=800)
+                col_btn.form_submit_button("edit", onclick=edit_answer)
+    else:
+        st.warning("无法编辑！对话不存在")
+
+def edit_answer():
+    # 修改上一次对话内容
+    if len(st.session_state["conv_robot"]) > 0:
+        txt = st.session_state['edit_answer']
+        st.session_state["conv_robot"][-1] = txt
+        st.success("对话内容已修改")
+
+
 def rollback():
     # 移除最新的一轮对话
     st.session_state['conv_robot'].pop()
@@ -235,6 +255,9 @@ prompt_text = st.sidebar.text_area("Enter Prompt", value=_prompt_text, placehold
                             label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
 st.session_state.input_text_state = prompt_text
 append_to_input_text()
+need_edit_answer = st.button("编辑AI的回答（高级功能）")
+if need_edit_answer:
+    show_edit_dialog()
     
 with st.form("my_form"):
     col_icon, col_text, col_btn = st.columns((1, 10, 2))
