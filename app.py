@@ -255,7 +255,7 @@ prompt_text = st.sidebar.text_area("Enter Prompt", value=_prompt_text, placehold
                             label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
 st.session_state.input_text_state = prompt_text
 append_to_input_text()
-need_edit_answer = st.sidebar.button("编辑AI的回答（高级功能）")
+need_edit_answer = st.sidebar.button("🔬 编辑AI的回答（高级功能）")
 if need_edit_answer:
     show_edit_dialog()
     
