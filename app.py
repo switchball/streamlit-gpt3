@@ -10,6 +10,7 @@ from transformers import GPT2Tokenizer
 from prompt import PROMPTS, get_prompt_by_preset_id
 from collect import TokenCounter
 from dialog import message
+from share import generate_share_link, restore_from_share_link
 
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -245,6 +246,9 @@ def rollback():
     st.session_state['input'] = user_input
 
 
+# 恢复 / 保存
+restore_from_share_link()
+
 preset_id_options = [p["preset"] for p in PROMPTS]
 preset_id_options.append("自定义")
 if 'preset' not in st.session_state:
@@ -259,6 +263,12 @@ need_edit_answer = st.sidebar.button("🔬 编辑AI的回答（高级功能）")
 if need_edit_answer:
     show_edit_dialog()
     
+# 恢复 / 保存
+if st.sidebar.button("🔗 生成分享链接"):
+    share_link = generate_share_link()
+    st.sidebar.success(f"链接已生成 [右键复制]({share_link}) 有效期7天")
+
+
 with st.form("my_form"):
     col_icon, col_text, col_btn = st.columns((1, 10, 2))
     col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{"lorelei"}/svg?seed={seed}" alt="avatar" />""", unsafe_allow_html=True)
