@@ -283,6 +283,9 @@ with st.form("my_form"):
         response, answer = after_submit(input_text, model_val, temperature_val, max_tokens_val)
         st.session_state.conv_user.append(input_text)
         st.session_state.conv_robot.append(answer)
+        finish_reason = response['choices'][0].get('finish_reason', '')
+        if finish_reason == 'length':
+            st.sidebar.info("👆 上次输入因长度被截断，可考虑撤回该消息，并调大该参数后重试")
     
     show_conversation_dialog(rollback_fn=rollback)
 
