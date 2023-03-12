@@ -249,16 +249,18 @@ def rollback():
 # 恢复 / 保存
 restore_from_share_link()
 
-preset_id_options = [p["preset"] for p in PROMPTS]
-preset_id_options.append("自定义")
-if 'preset' not in st.session_state:
-    load_preset_qa()
-prompt_id = st.sidebar.selectbox('预设身份的提示词', options=preset_id_options, index=0, on_change=load_preset_qa, key="preset")
-_prompt_text = get_prompt_by_preset_id(prompt_id)
-prompt_text = st.sidebar.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
-                            label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
-st.session_state.input_text_state = prompt_text
-append_to_input_text()
+st.sidebar.title("✨ GPT Interface")
+with st.sidebar.expander('🎈 预设身份的提示词 (Preset Prompts)', expanded=False):
+    preset_id_options = [p["preset"] for p in PROMPTS]
+    preset_id_options.append("自定义")
+    if 'preset' not in st.session_state:
+        load_preset_qa()
+    prompt_id = st.selectbox('预设身份的提示词', options=preset_id_options, index=0, on_change=load_preset_qa, key="preset", label_visibility="collapsed")
+    _prompt_text = get_prompt_by_preset_id(prompt_id)
+    prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
+                                label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
+    st.session_state.input_text_state = prompt_text
+    append_to_input_text()
 need_edit_answer = st.sidebar.button("🔬 编辑AI的回答（高级功能）")
 if need_edit_answer:
     show_edit_dialog()
@@ -274,9 +276,10 @@ with st.form("my_form"):
     col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{"lorelei"}/svg?seed={seed}" alt="avatar" />""", unsafe_allow_html=True)
     input_text = col_text.text_input("You: ", "", key="input", label_visibility="collapsed")
 
-    model_val = st.sidebar.selectbox("Model", options=LANGUAGE_MODELS, index=0)
-    temperature_val = st.sidebar.slider("Temperature", 0.0, 2.0, 0.9, step=0.05)
-    max_tokens_val = st.sidebar.select_slider("Max Tokens", options=(256, 512, 1024), value=512) 
+    with st.sidebar.expander('🧩 模型参数 (Model Parameters)'):
+        model_val = st.selectbox("Model", options=LANGUAGE_MODELS, index=0)
+        temperature_val = st.slider("Temperature", 0.0, 2.0, 0.9, step=0.05)
+        max_tokens_val = st.select_slider("Max Tokens", options=(256, 512, 1024), value=512) 
     # Every form must have a submit button.
     submitted = col_btn.form_submit_button("💬")
     if submitted:
