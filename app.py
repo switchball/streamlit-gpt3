@@ -101,6 +101,7 @@ LANGUAGE_MODELS = ['gpt-3.5-turbo', 'text-davinci-003', 'text-curie-001', 'text-
 CODEX_MODELS = ['code-davinci-002', 'code-cushman-001']
 
 HINT_TEXTS = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
+TOKEN_SAVING_HINT_THRESHOLD = 2000
 
 # store chat as session state
 DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\n"
@@ -128,7 +129,73 @@ if 'seed' not in st.session_state:
     st.session_state['seed'] = random.randint(0, 1000)
 seed = st.session_state['seed']
 
-def after_submit(current_input, model, temperature, max_tokens):
+
+class ConversationCompressConfig:
+    def __init__(self, *, enabled, max_human_conv_reserve_count=None, max_robot_conv_reserve_count=None, enable_first_conv=None) -> None:
+        self.enabled = enabled
+        self.max_human_conv_reserve_count = max_human_conv_reserve_count
+        self.max_robot_conv_reserve_count = max_robot_conv_reserve_count
+        self.enable_first_conv = enable_first_conv
+    
+    def get_message_list(self):
+        if self.enabled:
+            return self._get_compressed_message_list()
+        else:
+            return self._get_full_message_list()
+    
+    @property
+    def full_message_tokens(self):
+        ms = self._get_full_message_list()
+        txt = "".join(m["content"] for m in ms)
+        tokens = get_tokenizer().tokenize(txt)
+        return len(tokens)
+    
+    @property
+    def compressed_message_tokens(self):
+        ms = self._get_compressed_message_list()
+        txt = "".join(m["content"] for m in ms)
+        tokens = get_tokenizer().tokenize(txt)
+        return len(tokens)
+
+    def _get_full_message_list(self):
+        """ Get full message list (for Chat Completion) """
+        message_list = []
+        # Add system prompt
+        if st.session_state['prompt_system']:
+            message_list.append({"role": "system", "content": st.session_state["prompt_system"]})
+        # Add history conversations
+        for conv_user, conv_robot in zip(st.session_state['conv_user'], st.session_state['conv_robot']):
+            message_list.append({"role": "user", "content": conv_user})
+            message_list.append({"role": "assistant", "content": conv_robot})
+        return message_list
+
+    def _get_compressed_message_list(self):
+        """ Get compressed message list (for Chat Completion) """
+        message_list = []
+        # Add system prompt
+        if st.session_state['prompt_system']:
+            message_list.append({"role": "system", "content": st.session_state["prompt_system"]})
+        # Add history conversations but compressed
+        turns_count = min(len(st.session_state['conv_user']), len(st.session_state['conv_robot']))
+        for turn_idx in range(turns_count):
+            should_keep_human = False   # should keep human conversations at this turn
+            should_keep_robot = False   # should keep robot conversations at this turn
+            if turn_idx == 0 and self.enable_first_conv:
+                should_keep_human, should_keep_robot = True, True
+            if turn_idx + self.max_human_conv_reserve_count >= turns_count:
+                should_keep_human = True
+            if turn_idx + self.max_robot_conv_reserve_count >= turns_count:
+                should_keep_robot = True
+            # Add conversations to message_list
+            if should_keep_human or should_keep_robot:
+                conv_user = st.session_state['conv_user'][turn_idx] if should_keep_human else ""
+                conv_robot = st.session_state['conv_robot'][turn_idx] if should_keep_robot else ""
+                message_list.append({"role": "user", "content": conv_user})
+                message_list.append({"role": "assistant", "content": conv_robot})
+            
+        return message_list
+
+def after_submit(current_input, model, temperature, max_tokens, cc_config: ConversationCompressConfig):
     # Append current_input to input_text_state
     st.session_state.input_text_state += current_input
 
@@ -141,14 +208,8 @@ def after_submit(current_input, model, temperature, max_tokens):
 
     # Send text and waiting for respond
     if 'gpt' in model:
-        message_list = []
-        # Add system prompt
-        if st.session_state['prompt_system']:
-            message_list.append({"role": "system", "content": st.session_state["prompt_system"]})
-        # Add history conversations
-        for conv_user, conv_robot in zip(st.session_state['conv_user'], st.session_state['conv_robot']):
-            message_list.append({"role": "user", "content": conv_user})
-            message_list.append({"role": "assistant", "content": conv_robot})
+        # Get system prompt + history conversations
+        message_list = cc_config.get_message_list()
         # Add current user input
         message_list.append({"role": "user", "content": current_input})
         response = chat_completion(
@@ -218,17 +279,18 @@ def show_conversation_dialog(rollback_fn):
             message(st.session_state["conv_robot"][i], key=str(i), seed=seed, on_click=(rollback_fn if i == num - 1 else None))
             message(st.session_state['conv_user'][i], is_user=True, key=str(i) + '_user', seed=seed)
 
-def show_edit_dialog():
+def show_edit_dialog(slot):
     """ Show dialog that edits AI answer """
-    if len(st.session_state["conv_robot"]) > 0:
-        with st.expander("手动编辑上一次AI回复的内容", expanded=True):
-            with st.form("edit_form"):
-                # 加载上一次AI回复的内容
-                st.session_state['edit_answer'] = st.session_state["conv_robot"][-1]
-                st.form_submit_button("📝 确认修改", on_click=edit_answer)
-                st.text_area('对话内容', key='edit_answer', height=800)
-    else:
-        st.warning("无法编辑！对话不存在")
+    with slot:
+        if len(st.session_state["conv_robot"]) > 0:
+            with st.expander("⭐ 手动编辑上一次AI回复的内容", expanded=True):
+                with st.form("edit_form"):
+                    # 加载上一次AI回复的内容
+                    st.session_state['edit_answer'] = st.session_state["conv_robot"][-1]
+                    st.form_submit_button("📝 确认修改", on_click=edit_answer)
+                    st.text_area('对话内容', key='edit_answer', height=800)
+        else:
+            st.warning("无法编辑！对话不存在")
 
 def edit_answer():
     # 修改上一次对话内容
@@ -261,14 +323,32 @@ with st.sidebar.expander('🎈 预设身份的提示词 (Preset Prompts)', expan
                                 label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
     st.session_state.input_text_state = prompt_text
     append_to_input_text()
-need_edit_answer = st.sidebar.button("🔬 编辑AI的回答（高级功能）")
-if need_edit_answer:
-    show_edit_dialog()
-    
-# 恢复 / 保存
-if st.sidebar.button("🔗 生成分享链接"):
-    share_link = generate_share_link()
-    st.sidebar.success(f"链接已生成 [右键复制]({share_link}) 有效期7天")
+
+edit_answer_slot = st.empty()
+
+# 对话保留设置
+with st.sidebar.expander('⭐ 对话设置'):
+    enbale_conv_reserve = st.checkbox("开启对话压缩", value=False, help="若开启，仅会发送对话中的特定部分作为上下文\n\n若关闭，所有聊天内容都会作为上下文发送")
+    if enbale_conv_reserve:
+        max_robot_conv_reserve_count = st.number_input(':hash: 仅保留最近AI回复对话数', 0, None, 3, help="设定最多保留多少次 AI 最近的回复内容")
+        max_human_conv_reserve_count = st.number_input(':hash: 仅保留最近输入对话数', 0, None, 10, help="设定最多保留多少次最近输入的提问内容")
+        enable_first_conv = st.checkbox('必定保留第一轮对话', help="推荐在第一轮对话包含特殊设定时开启")
+
+        cc_config = ConversationCompressConfig(
+            enabled=True,
+            max_human_conv_reserve_count=max_human_conv_reserve_count,
+            max_robot_conv_reserve_count=max_robot_conv_reserve_count,
+            enable_first_conv=enable_first_conv)
+        full_tokens = cc_config.full_message_tokens
+        active_tokens = cc_config.compressed_message_tokens
+        st.caption(f"预估压缩前/后： `{active_tokens}`/ `{full_tokens}` tokens")
+    else:
+        cc_config = ConversationCompressConfig(enabled=False)
+
+if st.session_state['input_text_state'] and not enbale_conv_reserve:
+    tokens = get_tokenizer().tokenize(st.session_state['input_text_state'])
+    if len(tokens) > TOKEN_SAVING_HINT_THRESHOLD:
+        st.sidebar.info(f"👆 全文 Token 数 >= {TOKEN_SAVING_HINT_THRESHOLD}，可考虑开启对话压缩功能")
 
 
 with st.form("my_form"):
@@ -283,7 +363,7 @@ with st.form("my_form"):
     # Every form must have a submit button.
     submitted = col_btn.form_submit_button("💬")
     if submitted:
-        response, answer = after_submit(input_text, model_val, temperature_val, max_tokens_val)
+        response, answer = after_submit(input_text, model_val, temperature_val, max_tokens_val, cc_config)
         st.session_state.conv_user.append(input_text)
         st.session_state.conv_robot.append(answer)
         finish_reason = response['choices'][0].get('finish_reason', '')
@@ -303,6 +383,15 @@ with st.form("my_form"):
     if submitted:
         st.json(response, expanded=False)
         # st.write("temperature", temperature_val)
+
+need_edit_answer = st.sidebar.button("🔬 编辑AI的回答（高级功能）")
+if need_edit_answer:
+    show_edit_dialog(slot=edit_answer_slot)
+    
+# 恢复 / 保存
+if st.sidebar.button("🔗 生成分享链接"):
+    share_link = generate_share_link()
+    st.sidebar.success(f"链接已生成 [右键复制]({share_link}) 有效期7天")
 
 """---"""
 
