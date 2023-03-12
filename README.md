@@ -9,8 +9,12 @@ Streamlit-GPT3 is a web-based preview tool interface created using Streamlit. Th
 * **Conversation Response** - Input prompts and the AI will respond as if engaged in a conversation.
 * **Parameter Conditions** - Customize the context and output of the generated text by modifying various parameters.
 * **Model Selection** - Choose from a range of GPT-3 models tailored to suit your application.  Default is GPT-3.5-Turbo, davinci-model is also supported.
-* **Link Sharing** - Share the generated text with others via a unique link.
+
+## Features (Advanced)
 * **Recall Last Message** - You can recall the last message sent to the AI if you would like to edit your question.
+* **Response Editing** - Guide its answers in specific situations. Customize and direct the conversation with the assistant to best fit your needs.
+* **Link Sharing** - Share the generated text with others via a unique link. Also a faster alternative of save/load.
+* **Token Saving** - Reduce token usages by setting the number of conversation, in order to support longer conversations. 
 
 ## Installation
 
