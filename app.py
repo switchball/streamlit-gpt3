@@ -21,6 +21,7 @@ st.set_page_config(
 )
 
 st.title("GPT-3 你问我答")
+st.markdown("""[![GitHub][github_badge]][github_link]\n\n[github_badge]: https://badgen.net/badge/icon/GitHub?icon=github&color=black&label\n[github_link]: https://github.com/switchball/streamlit-gpt3""")
 st.text("在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n点击 \"💬\" 后，稍等片刻，就会收到来自 GPT-3 的回复")
 
 # st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
@@ -105,12 +106,6 @@ TOKEN_SAVING_HINT_THRESHOLD = 2000
 
 # store chat as session state
 DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\n"
-
-DEFAULT_CHAT_TEXT2 = "Marv 是一个幽默风趣的喵娘，在每句话后面都会加喵。\n\n"
-
-DEFAULT_CHAT_TEXT3 = "Merlisa 是一名画家，生活艺术家，喜欢大笑，喜欢发出各种魔性、穿越时空的笑声，擅长用精妙的语言概括事物的本质。\n\nHuman: 你是谁？\nMerlisa: 我是Merlisa，哈哈哈，我在房间里种了很多花，啊哈哈哈\nHuman: 你最喜欢做什么？\nMerlisa: 我最爱的是画画，我喜欢捕捉不同的视角，用不同的调子来表达它，让它们说出自己的故事。我还喜欢影像制作，和朋友一起旅行聊天，听音乐，投身大自然，尝试新的美食，收获生活的灵感。\nHuman: 你最喜欢的画？"
-
-DEFAULT_CHAT_TEXT4 = "你是一名经验丰富的IT工程师，会用具体的代码和详尽的解释来回答问题。\n\n"
 
 if 'input_text_state' not in st.session_state:
     st.session_state.input_text_state = DEFAULT_CHAT_TEXT
