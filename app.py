@@ -266,21 +266,24 @@ def append_to_input_text():
             st.session_state.input_text_state += '\nHuman: '
 
 
-def show_conversation_dialog(slot_list, rollback_fn):
+def show_conversation_dialog(slot_list, rollback_fn, reverse_order=False):
     """ Render the conversation dialogs """
     just_loaded_from_share = False
     if 'loaded_from_share' in st.session_state and st.session_state['loaded_from_share']:
         just_loaded_from_share = True
         st.session_state['loaded_from_share'] = False
+    if not slot_list:
+        reverse_order = True
     if st.session_state.conv_robot:
         num = len(st.session_state.conv_robot)
-        for i in range(num):
-            with slot_list[i*2]:
-                message(st.session_state['conv_user'][i], is_user=True, key=str(i) + '_user', seed=seed)
-            if just_loaded_from_share:
-                time.sleep(1)
-            with slot_list[i*2 + 1]:
-                message(st.session_state["conv_robot"][i], key=str(i), seed=seed, on_click=(rollback_fn if i == num - 1 else None))
+        # From user0, robot0, ..., user_{n-1}, robot_{n-1} in normal order
+        order_indexes = reversed(range(2*num)) if reverse_order else range(2*num)
+        for j in order_indexes:
+            slot = st.empty() if reverse_order else slot_list[j]
+            with slot:
+                is_user = j % 2 == 0
+                text = st.session_state['conv_user'][j//2] if is_user else st.session_state["conv_robot"][j//2]
+                message(text, is_user=is_user, key=str(j), seed=seed, on_click=(rollback_fn if j == 2 * num - 1 else None))
             if just_loaded_from_share:
                 time.sleep(1)
                 
@@ -349,6 +352,7 @@ with st.sidebar.expander('⭐ 对话设置'):
         st.caption(f"预估压缩前/后： `{active_tokens}`/ `{full_tokens}` tokens")
     else:
         cc_config = ConversationCompressConfig(enabled=False)
+    enable_reverse_order = st.checkbox("对话倒序显示", value=False, help="开启后，输入框在上方，最近的对话在最上方\n\n关闭后，输入框在下方，最早的对话在上方")
 
 if st.session_state['input_text_state'] and not enbale_conv_reserve:
     tokens = get_tokenizer().tokenize(st.session_state['input_text_state'])
@@ -357,7 +361,7 @@ if st.session_state['input_text_state'] and not enbale_conv_reserve:
 
 
 with st.form("my_form"):
-    dialog_slot_list = [st.empty() for _ in range(2 + 2 * len(st.session_state['conv_user']))]
+    dialog_slot_list = None if enable_reverse_order else [st.empty() for _ in range(2 + 2 * len(st.session_state['conv_user']))]
     col_icon, col_text, col_btn = st.columns((1, 10, 2))
     col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{"lorelei"}/svg?seed={seed}" alt="avatar" />""", unsafe_allow_html=True)
     input_text = col_text.text_input("You: ", "", key="input", label_visibility="collapsed")
@@ -376,7 +380,7 @@ with st.form("my_form"):
         if finish_reason == 'length':
             st.sidebar.info("👆 上次输入因长度被截断，可考虑撤回该消息，并调大该参数后重试")
     
-    show_conversation_dialog(dialog_slot_list, rollback_fn=rollback)
+    show_conversation_dialog(dialog_slot_list, rollback_fn=rollback, reverse_order=enable_reverse_order)
 
     # When the input_text_state is bind to widget, its content cannot be modified by session api.
     with st.expander(""):
