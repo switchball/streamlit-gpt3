@@ -7,7 +7,7 @@ import plotly.express as px
 from transformers import GPT2Tokenizer
 
 
-from prompt import PROMPTS, get_prompt_by_preset_id
+from prompt import PROMPTS, get_prompt_by_preset_id, get_suggestion_by_preset_id
 from collect import TokenCounter
 from dialog import message
 from share import generate_share_link, restore_from_share_link
@@ -329,6 +329,9 @@ with st.sidebar.expander('🎈 预设身份的提示词 (Preset Prompts)', expan
     _prompt_text = get_prompt_by_preset_id(prompt_id)
     prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
                                 label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))
+    _suggestion = get_suggestion_by_preset_id(prompt_id)
+    if _suggestion:
+        st.warning(_suggestion, icon="⚠️")
     st.session_state.input_text_state = prompt_text
     append_to_input_text()
 

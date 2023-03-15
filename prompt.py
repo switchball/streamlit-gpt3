@@ -20,6 +20,16 @@ PROMPTS = [
         "input": "你想吃罐头吗？"
     },
     {
+        "preset": "预设 3 (抽认卡制作)",
+        "prompt": """"我希望你能扮演一个专业的抽认卡制作者，能够根据我提供的文本制作抽认卡。\n\n制作抽认卡的说明：\n*一张抽认卡包含一个问题、答案和其他细节\n*保持抽认卡的简单、清晰，并集中于最重要的信息\n*确保问题是具体的、不含糊的。\n*使用清晰和简洁的语言。使用简单而直接的语言，使卡片易于阅读和理解\n*答案应该只包含一个关键的事实/名称/概念/术语\n*关于答案的更多信息应始终放在"细节"一栏中\n\n请将你制作的卡片以markdown表格（问题/答案/细节）的形式输出，不要有任何额外的文字。""",
+        "message": [
+            {"role": "user", "content": "细胞凋亡指基因决定的细胞自动结束生命的过程，是一种正常的自然生理过程，如蝌蚪尾消失，它对于多细胞生物体正常发育，维持内部环境的稳定以及地域外界因素干扰具有非常关键作用。"},
+            {"role": "assistant", "content": """| 问题 | 答案 | 细节 |\n| --- | --- | --- |\n| 什么是细胞凋亡？ | 细胞自动结束生命的过程 | 基因决定，是一种正常的自然生理过程 |\n| 细胞凋亡在多细胞生物体中有什么作用？ | 对于正常发育、维持内部环境稳定以及抵御外界因素干扰具有关键作用 | 如蝌蚪尾消失等 |"""}
+        ],
+        "input": "<请输入知识点>",
+        "suggestion": "此任务为专业知识类问答，建议调参至 temperature <= 0.3 以获取更加确定性的结果"
+    },
+    {
         "preset": "英文翻译 + 总结摘要",
         "prompt": "translate following text to Chinese, the text will be given one by one, format like 内容：<中文翻译> \n总结：<Tl;dr of the text>",
         "message": [
@@ -120,3 +130,11 @@ def get_prompt_by_preset_id(preset_id):
         if p["preset"] == preset_id:
             return p["prompt"]
     return ''
+
+def get_suggestion_by_preset_id(preset_id):
+    if preset_id == '自定义':
+        return None
+    for p in PROMPTS:
+        if p["preset"] == preset_id:
+            return p.get("suggestion", None)
+    return None
