@@ -139,6 +139,13 @@ class ConversationCompressConfig:
             return self._get_full_message_list()
     
     @property
+    def message_tokens(self):
+        if self.enabled:
+            return self.compressed_message_tokens
+        else:
+            return self.full_message_tokens
+    
+    @property
     def full_message_tokens(self):
         ms = self._get_full_message_list()
         txt = "".join(m["content"] for m in ms)
@@ -195,7 +202,10 @@ def after_submit(current_input, model, temperature, max_tokens, cc_config: Conve
     st.session_state.input_text_state += current_input
 
     # Queue by prompt length and max_tokens
-    token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
+    if 'gpt' in model:
+        token_number = cc_config.message_tokens
+    else:
+        token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
     x = token_number / 1024
     delay = 2 * x * x - 3
     delay += 2 * x * (max_tokens / 1024 - 1)
