@@ -11,6 +11,10 @@ from utils.remote_llm import RemoteLLM
 
 MODEL_END_POINT = st.secrets["MODEL_END_POINT"]
 
+enable_feature = st.experimental_get_query_params().get("feature", None)
+if enable_feature is None or enable_feature[0] == "0":
+    st.warning("该功能正在内测中 ... 敬请期待 ...")
+    st.stop()
 
 # 遍历 content 内部的所有标签，输出每个标签的内容
 def traverse(element, level=0, file=None, suffix=""):
