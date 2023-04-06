@@ -68,7 +68,7 @@ def get_wechat_article(url, mode="simple"):
 
 def test(text, temperature):
     result = RemoteLLM(MODEL_END_POINT).completion(input_text=text, temperature=temperature)
-    st.markdown(result)
+    st.json(result)
     
 
 def chunks(lst, n):
@@ -82,6 +82,8 @@ if __name__ == '__main__':
     if url.startswith("https://mp.weixin.qq.com"):
         title, content = get_wechat_article(url, mode="line")
         st.write("## " + title)
+        progress_text = "Operation in progress. Please wait."
+        my_bar = st.sidebar.progress(0.0, text=progress_text)
         for ctc in content.split('\n'):
             # st.markdown(ctc)
             # st.write("====>", len(ctc))
@@ -92,6 +94,8 @@ if __name__ == '__main__':
                 for i, c in enumerate(chunks(ctc, chunk_size)):
                     st.markdown(c)
                     st.write(i, "==>", len(c))
+
+                    my_bar.progress((i+1)/chunk_num, text=progress_text)
 
                     test(c, t)
                     st.markdown("\n\n---\n")
