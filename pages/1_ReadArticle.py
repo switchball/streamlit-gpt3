@@ -66,8 +66,8 @@ def get_wechat_article(url, mode="simple"):
     return title, content_text
 
 
-def test(text):
-    result = RemoteLLM(MODEL_END_POINT).completion(input_text=text)
+def test(text, temperature):
+    result = RemoteLLM(MODEL_END_POINT).completion(input_text=text, temperature=temperature)
     st.markdown(result)
     
 
@@ -77,6 +77,7 @@ def chunks(lst, n):
 
 
 if __name__ == '__main__':
+    t = st.number_input("temperature", 0.0, 1.0, value=0.01)
     url = st.text_input("Enter the URL:")
     if url.startswith("https://mp.weixin.qq.com"):
         title, content = get_wechat_article(url, mode="line")
@@ -85,17 +86,17 @@ if __name__ == '__main__':
             # st.markdown(ctc)
             # st.write("====>", len(ctc))
             
-            if len(ctc) >= 400:
-                chunk_num = math.ceil(len(ctc) / 400)
+            if len(ctc) >= 500:
+                chunk_num = math.ceil(len(ctc) / 500)
                 chunk_size = math.ceil(len(ctc) / chunk_num)
                 for i, c in enumerate(chunks(ctc, chunk_size)):
                     st.markdown(c)
                     st.write(i, "==>", len(c))
 
-                    test(c)
+                    test(c, t)
                     st.markdown("\n\n---\n")
 
             else:
-                test(ctc)
+                test(ctc, t)
     else:
         st.write("URL should start with `https://mp.weixin.qq.com`")

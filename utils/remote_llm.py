@@ -7,19 +7,23 @@ class RemoteLLM:
     def __init__(self, model_end_point) -> None:
         self.model_end_point = model_end_point
 
-    def completion(self, input_text, config=None):
+    def completion(self, input_text, **kwargs):
         headers = {
             'accept': 'application/json',
             'Content-Type': 'application/json',
         }
 
         data = '{ "input": "" }'
-        data = {"input": f"TL;dr 中文总结 {input_text}"}
+        data = {
+            "input": f"TL;dr 总结这段话：{input_text} 上文总结：",
+            "config": kwargs
+        }
 
         response = requests.post(self.model_end_point, headers=headers, data=json.dumps(data))
         print(response.status_code)
-        msg =  response.json()['msg']
-        return msg.split("Assistant:")[-1]
+        result =  response.json()
+        # success if result['code'] == 0
+        return result
 
     def summary(self):
         pass
