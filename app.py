@@ -4,7 +4,7 @@ import openai
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from transformers import GPT2Tokenizer
+from utils.common_resource import get_tokenizer
 
 
 from prompt import PROMPTS, get_prompt_by_preset_id, get_suggestion_by_preset_id
@@ -39,10 +39,6 @@ def get_token_counter():
     tc = TokenCounter(interval=900)
     return tc
 
-@st.cache_resource(ttl=86400)
-def get_tokenizer():
-    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-    return tokenizer
 
 def wait(delay, reason=""):
     if delay <= 5:

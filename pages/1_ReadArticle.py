@@ -8,6 +8,7 @@ import math
 import time
 from bs4 import BeautifulSoup
 from tempfile import NamedTemporaryFile
+from utils.common_resource import get_tokenizer
 from utils.remote_llm import RemoteLLM
 
 MODEL_END_POINT = st.secrets["MODEL_END_POINT"]
@@ -99,12 +100,13 @@ if __name__ == '__main__':
                 chunk_size = math.ceil(len(ctc) / chunk_num)
                 for i, c in enumerate(chunks(ctc, chunk_size)):
                     st.markdown(c)
-                    st.write(i, "==>", len(c))
+                    size = len(get_tokenizer().tokenize(c))
+                    st.write(i, "==> len(#) =", len(c), ', len(#tokens) =', size)
 
                     my_bar.progress((i+1)/chunk_num, text=progress_text)
 
                     msg, tokens = test(c, t)
-                    summary = msg + '\n'
+                    summary += msg + '\n'
                     total_tokens += tokens
                     st.markdown("\n\n---\n")
 
