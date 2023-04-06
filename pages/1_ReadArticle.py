@@ -5,6 +5,7 @@
 import streamlit as st
 import requests
 import math
+import time
 from bs4 import BeautifulSoup
 from tempfile import NamedTemporaryFile
 from utils.remote_llm import RemoteLLM
@@ -69,7 +70,9 @@ def get_wechat_article(url, mode="simple"):
 def test(text, temperature):
     result = RemoteLLM(MODEL_END_POINT).completion(input_text=text, temperature=temperature)
     st.json(result)
-    
+    msg = result["msg"]
+    total_tokens = result["usage"]["total_tokens"]
+    return msg, total_tokens
 
 def chunks(lst, n):
     for i in range(0, len(lst), n):
@@ -84,6 +87,9 @@ if __name__ == '__main__':
         st.write("## " + title)
         progress_text = "Operation in progress. Please wait."
         my_bar = st.sidebar.progress(0.0, text=progress_text)
+        tic = time.time()
+        total_tokens = 0
+        summary = ""
         for ctc in content.split('\n'):
             # st.markdown(ctc)
             # st.write("====>", len(ctc))
@@ -97,10 +103,19 @@ if __name__ == '__main__':
 
                     my_bar.progress((i+1)/chunk_num, text=progress_text)
 
-                    test(c, t)
+                    msg, tokens = test(c, t)
+                    summary = msg + '\n'
+                    total_tokens += tokens
                     st.markdown("\n\n---\n")
 
             else:
-                test(ctc, t)
+                msg, tokens = test(ctc, t)
+                summary = msg
+                total_tokens += tokens
+        toc = time.time()
+        estimate_rate = total_tokens / (toc - tic) * 60 if toc > tic else 0
+        st.sidebar.markdown(f"Rate: `{int(estimate_rate)} tokens/min`, Elapsed: `{int(toc - tic)}` seconds")
+        st.sidebar.subheader('Summary:')
+        st.sidebar.markdown(summary)
     else:
         st.write("URL should start with `https://mp.weixin.qq.com`")
