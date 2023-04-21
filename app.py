@@ -246,9 +246,19 @@ def after_submit(current_input, model, temperature, max_tokens, cc_config: Conve
     return response, answer
 
 
-def load_preset_qa():
+def load_preset_id_from_url_link():
+    """ Load preset if it is provided in url link """
+    query = st.experimental_get_query_params()
+    preset_id = query.get("preset", [""])[0]
+    if preset_id:
+        for p in PROMPTS:
+            if preset_id == p['preset']:
+                return preset_id
+    return None
+
+def load_preset_qa(candidate=None):
     """ Load default preset Q&A """
-    preset = st.session_state.get("preset", '预设 1 (ChatBot)')
+    preset = st.session_state.get("preset", candidate or '预设 1 (ChatBot)')
     st.session_state['conv_user'].clear()
     st.session_state['conv_robot'].clear()
     # load prompt message into conversations
@@ -330,7 +340,7 @@ with st.sidebar.expander('🎈 预设身份的提示词 (Preset Prompts)', expan
     preset_id_options = [p["preset"] for p in PROMPTS]
     preset_id_options.append("自定义")
     if 'preset' not in st.session_state:
-        load_preset_qa()
+        load_preset_qa(candidate=load_preset_id_from_url_link())
     prompt_id = st.selectbox('预设身份的提示词', options=preset_id_options, index=0, on_change=load_preset_qa, key="preset", label_visibility="collapsed")
     _prompt_text = get_prompt_by_preset_id(prompt_id)
     prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
