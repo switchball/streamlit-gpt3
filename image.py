@@ -94,8 +94,8 @@ def conversation2png(title, conv_user, conv_robot, seed=42):
         box_y += (dialogue_box_padding + font_size)
 
         # 自动换行
-        # lines = textwrap.fill(text, width=40)
-        lines = text_wrap(text, width=62)
+        lines = textwrap.fill(text, width=31)
+        # lines = text_wrap(text, width=62)
         print(lines)
         print('====')
         lines = lines.split('\n')

@@ -425,7 +425,7 @@ if st.sidebar.button("🔗 生成分享链接"):
 
 is_generate_image = st.sidebar.button("🖼️ 生成分享图片", key="image_button")
 if is_generate_image:
-    image = conversation2png(st.session_state['preset'], st.session_state['conv_user'], st.session_state['conv_robot'])
+    image = conversation2png(st.session_state['preset'], st.session_state['conv_user'], st.session_state['conv_robot'], seed=seed)
     st.image(image, caption='已生成图片，长按或右键保存')
 
 """---"""
