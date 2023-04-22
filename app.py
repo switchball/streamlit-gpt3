@@ -11,6 +11,7 @@ from prompt import PROMPTS, get_prompt_by_preset_id, get_suggestion_by_preset_id
 from collect import TokenCounter
 from dialog import message
 from share import generate_share_link, restore_from_share_link
+from image import conversation2png
 
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -421,6 +422,11 @@ if need_edit_answer:
 if st.sidebar.button("🔗 生成分享链接"):
     share_link = generate_share_link()
     st.sidebar.success(f"链接已生成 [右键复制]({share_link}) 有效期7天")
+
+is_generate_image = st.sidebar.button("🖼️ 生成分享图片", key="image_button")
+if is_generate_image:
+    image = conversation2png(st.session_state['preset'], st.session_state['conv_user'], st.session_state['conv_robot'])
+    st.image(image, caption='已生成图片，长按或右键保存')
 
 """---"""
 
