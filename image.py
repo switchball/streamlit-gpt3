@@ -18,7 +18,7 @@ def text_wrap(text, width):
 def conversation2png(title, conv_user, conv_robot, seed=42):
     # 图片大小
     img_width = 1000
-    img_height = 2000
+    img_height = 1200 + 150 * len(conv_user)
 
     # 背景颜色
     bg_color = (255, 255, 255)
