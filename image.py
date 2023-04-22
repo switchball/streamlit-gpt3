@@ -94,10 +94,11 @@ def conversation2png(title, conv_user, conv_robot, seed=42):
         box_y += (dialogue_box_padding + font_size)
 
         # 自动换行
-        lines = textwrap.fill(text, width=31)
+        line_arr = []
+        for txt in text.split('\n'):
+            line_arr.append(textwrap.fill(txt, width=31))
+        lines = '\n'.join(line_arr)
         # lines = text_wrap(text, width=62)
-        print(lines)
-        print('====')
         lines = lines.split('\n')
 
         # 计算对话框高度
