@@ -7,7 +7,7 @@ import plotly.express as px
 from utils.common_resource import get_tokenizer
 
 
-from prompt import PROMPTS, get_prompt_by_preset_id, get_suggestion_by_preset_id
+from prompt import PROMPTS, get_prompt_by_preset_id, get_suggestion_by_preset_id, get_description_by_preset_id
 from collect import TokenCounter
 from dialog import message
 from share import generate_share_link, restore_from_share_link
@@ -21,9 +21,11 @@ st.set_page_config(
     page_title="GPT-3 Playground", layout="wide", initial_sidebar_state="auto",
 )
 
-st.title("GPT-3 你问我答")
+st_tiltle_slot = st.empty()
+st_tiltle_slot.title("GPT-3 你问我答")
 st.markdown("""[![GitHub][github_badge]][github_link]\n\n[github_badge]: https://badgen.net/badge/icon/GitHub?icon=github&color=black&label\n[github_link]: https://github.com/switchball/streamlit-gpt3""")
-st.text("在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n点击 \"💬\" 后，稍等片刻，就会收到来自 GPT-3 的回复")
+st_desc_solt = st.empty()
+st_desc_solt.text("在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n点击 \"💬\" 后，稍等片刻，就会收到来自 GPT-3 的回复")
 
 # st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
 # st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
@@ -343,6 +345,10 @@ with st.sidebar.expander('🎈 预设身份的提示词 (Preset Prompts)', expan
     if 'preset' not in st.session_state:
         load_preset_qa(candidate=load_preset_id_from_url_link())
     prompt_id = st.selectbox('预设身份的提示词', options=preset_id_options, index=0, on_change=load_preset_qa, key="preset", label_visibility="collapsed")
+    # 动态更改标题和说明
+    st_tiltle_slot.title(prompt_id)
+    if get_description_by_preset_id(prompt_id) is not None:
+        st_desc_solt.text(get_description_by_preset_id(prompt_id))
     _prompt_text = get_prompt_by_preset_id(prompt_id)
     prompt_text = st.text_area("Enter Prompt", value=_prompt_text, placeholder='预设的Prompt', 
                                 label_visibility='collapsed', key='prompt_system', disabled=(_prompt_text != ''))

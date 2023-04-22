@@ -2,7 +2,7 @@
 
 PROMPTS = [
     {
-        "preset": "预设 1 (ChatBot)",
+        "preset": "GPT-3 你问我答 (ChatBot)",
         "prompt": "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。",
         "message": [
             {"role": "user", "content": "你好，你是谁？"},
@@ -37,6 +37,7 @@ PROMPTS = [
             {"role": "assistant", "content": "你好，我是苏格拉底。我可以与你进行对话，并帮助你探索问题背后的挑战和梳理思维，以追根究底的方式进行提问和讨论。你想要讨论什么观点呢？"}
         ],
         "input": "<请输入你想要讨论的观点>",
+        "description": "✨苏格拉底提问法是一种哲学思维方式，源于古希腊哲学家苏格拉底的探究方法。其核心在于通过反复质问对方，以达到揭示真相的目的。\n✨这种方法主要通过提出一系列问题来引导对话，使被质问者从自己的观点和信念中找到漏洞和不足之处，并由此进行思考和反省。",
         "suggestion": "你可以通过调整 [对话设置]> [#保留最近AI回复对话数] 来控制对话的上下文范围"
     },
     {
@@ -147,4 +148,12 @@ def get_suggestion_by_preset_id(preset_id):
     for p in PROMPTS:
         if p["preset"] == preset_id:
             return p.get("suggestion", None)
+    return None
+
+def get_description_by_preset_id(preset_id):
+    if preset_id == '自定义':
+        return None
+    for p in PROMPTS:
+        if p["preset"] == preset_id:
+            return p.get("description", None)
     return None
