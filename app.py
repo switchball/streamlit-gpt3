@@ -261,7 +261,7 @@ def load_preset_id_from_url_link():
 
 def load_preset_qa(candidate=None):
     """ Load default preset Q&A """
-    preset = st.session_state.get("preset", candidate or '预设 1 (ChatBot)')
+    preset = st.session_state.get("preset", candidate or 'GPT-3 你问我答 (ChatBot)')
     st.session_state['conv_user'].clear()
     st.session_state['conv_robot'].clear()
     # load prompt message into conversations
