@@ -85,16 +85,50 @@ def chat_completion(
     max_tokens=256,
     top_p=1,
     frequency_penalty=0,
-    presence_penalty=0.6
+    presence_penalty=0.6,
+    stream=False
     ):
     """ Chat completion """
     with st.spinner(text=random.choice(HINT_TEXTS)):
         response = openai.ChatCompletion.create(
             model=model, messages=message_list, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
-            frequency_penalty=frequency_penalty, presence_penalty=presence_penalty
+            frequency_penalty=frequency_penalty, presence_penalty=presence_penalty, stream=stream
         )
-    print(response['choices'][0]['message']['content'])
-    return response
+    if stream:
+        reply_msg = ""
+        finish_reason = ""
+
+        # streaming chat with editable slot
+        reply_edit_slot = st.empty()
+        for chunk in response:
+            c = chunk['choices'][0]
+            delta = c.get('delta', {}).get('content', '')
+            finish_reason = c.get('finish_reason', '')
+            reply_msg += delta
+            reply_edit_slot.markdown(reply_msg)
+        reply_edit_slot.markdown("")
+
+        # calculate message tokens
+        txt = "".join(m["content"] for m in message_list)
+        input_tokens = len(get_tokenizer().tokenize(txt))
+        completion_tokens = len(get_tokenizer().tokenize(reply_msg))
+
+        # mock response
+        response = {
+            'choices': [{
+                'message': {
+                    'content': reply_msg,
+                    'role': 'assistant'
+                },
+                'finish_reason': finish_reason
+            }],
+            'usage': {
+                'total_tokens': input_tokens + completion_tokens
+            }
+        }
+        return response
+    else:
+        return response
 
 # Available Models
 LANGUAGE_MODELS = ['gpt-3.5-turbo', 'text-davinci-003', 'text-curie-001', 'text-babbage-001', 'text-ada-001']
@@ -196,7 +230,7 @@ class ConversationCompressConfig:
             
         return message_list
 
-def after_submit(current_input, model, temperature, max_tokens, cc_config: ConversationCompressConfig):
+def after_submit(current_input, model, temperature, max_tokens, cc_config: ConversationCompressConfig, stream=False):
     # Append current_input to input_text_state
     st.session_state.input_text_state += current_input
 
@@ -223,7 +257,8 @@ def after_submit(current_input, model, temperature, max_tokens, cc_config: Conve
             max_tokens=max_tokens,
             top_p=1,
             frequency_penalty=0,
-            presence_penalty=0.6
+            presence_penalty=0.6,
+            stream=stream
         )
         answer = response['choices'][0]['message']['content']
         st.session_state.input_text_state += answer
@@ -238,11 +273,13 @@ def after_submit(current_input, model, temperature, max_tokens, cc_config: Conve
             presence_penalty=0.6,
             stop=[" Human:", " AI:"]
         )
+        # TODO: non chat model also need stream function
         answer = response['choices'][0]['text']
         # TODO: should check if answer starts with '\nAI:'
         st.session_state.input_text_state += answer
         st.session_state.input_text_state += '\nHuman: '
 
+    print(answer)
     # Collect usage
     tc = get_token_counter()
     tc.collect(tokens=response['usage']['total_tokens'])
@@ -379,6 +416,7 @@ with st.sidebar.expander('⭐ 对话设置'):
     else:
         cc_config = ConversationCompressConfig(enabled=False)
     enable_reverse_order = st.checkbox("对话倒序显示", value=False, help="开启后，输入框在上方，最近的对话在最上方\n\n关闭后，输入框在下方，最早的对话在上方")
+    enable_stream_chat = st.checkbox("对话流式显示", value=True, help="开启后，以流式方式传输对话，无需等待")
 
 if st.session_state['input_text_state'] and not enbale_conv_reserve:
     tokens = get_tokenizer().tokenize(st.session_state['input_text_state'])
@@ -399,7 +437,7 @@ with st.form("my_form"):
     # Every form must have a submit button.
     submitted = col_btn.form_submit_button("💬")
     if submitted:
-        response, answer = after_submit(input_text, model_val, temperature_val, max_tokens_val, cc_config)
+        response, answer = after_submit(input_text, model_val, temperature_val, max_tokens_val, cc_config, stream=enable_stream_chat)
         st.session_state.conv_user.append(input_text)
         st.session_state.conv_robot.append(answer)
         finish_reason = response['choices'][0].get('finish_reason', '')
