@@ -8,6 +8,7 @@ import math
 import time
 import re
 import pandas as pd
+import openai
 from bs4 import BeautifulSoup
 from tempfile import NamedTemporaryFile
 from utils.common_resource import get_tokenizer
@@ -131,7 +132,7 @@ def get_wechat_article(url, mode="simple"):
     if mode == 'simple':
         content_text = content.text.strip()
     else:
-        with NamedTemporaryFile(mode="w+", delete=True) as temp_file:
+        with NamedTemporaryFile(mode="w+", delete=True, encoding="utf-8") as temp_file:
             traverse(content, file=temp_file)
             temp_file.seek(0)
             print(temp_file.name)
@@ -151,6 +152,72 @@ def test(text, temperature):
     msg = result["msg"]
     total_tokens = result["usage"]["total_tokens"]
     return msg, total_tokens
+
+def test2(text, temperature):
+    message_list = [
+        {"role": "system", "content": ""},
+        # {"role": "user", "content": f"TL;dr 总结这段话：{text} 上文总结："},
+        {"role": "user", "content": f"Instruction1=文段内容摘要 Instruction2 =推荐理由 content={text} [abstract, recommendation]="},
+        # {"role": "user", "content": f"TL;dr 总结这段话并写一个文章推荐理由：{text} 总结+推荐理由："},
+        # {"role": "user", "content": f"Instructions: 以详略得当的方式总结文本内容 Content: {text} Summary:"},
+    ]
+    result = chat_completion(message_list, temperature=0.1, stream=True)
+    st.json(result)
+    msg = result["choices"][0]['message']['content']
+    total_tokens = result["usage"]["total_tokens"]
+    return msg, total_tokens
+
+@st.cache_data(ttl=3600)
+def chat_completion(
+    message_list,
+    model="gpt-3.5-turbo",
+    temperature=0.6,
+    max_tokens=512,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0.6,
+    stream=False
+    ):
+    """ Chat completion """
+    response = openai.ChatCompletion.create(
+        model=model, messages=message_list, temperature=temperature, max_tokens=max_tokens, top_p=top_p, 
+        frequency_penalty=frequency_penalty, presence_penalty=presence_penalty, stream=stream
+    )
+    if stream:
+        reply_msg = ""
+        finish_reason = ""
+
+        # streaming chat with editable slot
+        reply_edit_slot = st.empty()
+        for chunk in response:
+            c = chunk['choices'][0]
+            delta = c.get('delta', {}).get('content', '')
+            finish_reason = c.get('finish_reason', '')
+            reply_msg += delta
+            reply_edit_slot.markdown(reply_msg)
+        reply_edit_slot.markdown("")
+
+        # calculate message tokens
+        txt = "".join(m["content"] for m in message_list)
+        input_tokens = len(get_tokenizer().tokenize(txt))
+        completion_tokens = len(get_tokenizer().tokenize(reply_msg))
+
+        # mock response
+        response = {
+            'choices': [{
+                'message': {
+                    'content': reply_msg,
+                    'role': 'assistant'
+                },
+                'finish_reason': finish_reason
+            }],
+            'usage': {
+                'total_tokens': input_tokens + completion_tokens
+            }
+        }
+        return response
+    else:
+        return response
 
 def chunks(lst, n):
     for i in range(0, len(lst), n):
@@ -173,8 +240,8 @@ if __name__ == '__main__':
             # st.markdown(ctc)
             # st.write("====>", len(ctc))
             
-            if len(ctc) >= 500:
-                chunk_num = math.ceil(len(ctc) / 500)
+            if len(ctc) >= 1500:
+                chunk_num = math.ceil(len(ctc) / 1500)
                 chunk_size = math.ceil(len(ctc) / chunk_num)
                 for i, c in enumerate(chunks(ctc, chunk_size)):
                     st.markdown(c)
@@ -183,13 +250,14 @@ if __name__ == '__main__':
 
                     my_bar.progress((i+1)/chunk_num, text=progress_text)
 
-                    msg, tokens = test(c, t)
+                    msg, tokens = test2(c, t)
                     summary += msg + '\n'
                     total_tokens += tokens
                     st.markdown("\n\n---\n")
 
             else:
-                msg, tokens = test(ctc, t)
+                st.markdown(ctc)
+                msg, tokens = test2(ctc, t)
                 summary += msg + '\n'
                 total_tokens += tokens
         toc = time.time()
