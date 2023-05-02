@@ -208,6 +208,8 @@ def generate_article_category(article_summary, temperature=0.6):
     df.columns = [x.strip() for x in df.columns]
     category_list = []
     for idx, line in df.iterrows():
+        if '标签名' not in line:
+            st.write(df)
         tag = line['标签名']
         # emoji = line['Emoji符号']
         if '---' in tag:
