@@ -15,6 +15,7 @@ from tempfile import NamedTemporaryFile
 from utils.common_resource import get_tokenizer
 from utils.remote_llm import RemoteLLM
 from prompt import get_prompt_by_preset_id
+from image import generate_article_image
 
 MODEL_END_POINT = st.secrets["MODEL_END_POINT"]
 
@@ -129,8 +130,18 @@ def get_wechat_article(url, mode="simple"):
     }
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.content.decode("utf8"), 'html.parser')
+    if soup.find('h1', {'class': 'rich_media_title'}) is None:
+        if soup.find('h2', {'class': 'weui-msg__title'}) is not None:
+            err_msg = soup.find('h2', {'class': 'weui-msg__title'}).text.strip()
+            st.warning('出错啦：' + err_msg)
+        else:
+            st.warning('服务器开小差啦')
+        return None, None
     title = soup.find('h1', {'class': 'rich_media_title'}).text.strip()
     content = soup.find('div', {'class': 'rich_media_content'})
+    # author = soup.find('span', {'id': 'profileBT'}).text.strip()
+    # author = soup.find('span', class_='weui-media-box__meta').text.strip()  # 作者
+    account_name = soup.find('strong', class_='profile_nickname').text.strip()  # 公众号名字
     if mode == 'simple':
         content_text = content.text.strip()
     else:
@@ -145,7 +156,7 @@ def get_wechat_article(url, mode="simple"):
         # df = pd.DataFrame.from_records(stack, columns=['name', 'level', 'font', 'text'])
         # st.table(df)
         # content_text = "\n".join(x["text"] for x in stack if x["text"])
-    return title, content_text
+    return title, content_text, account_name
 
 
 def test(text, temperature):
@@ -193,16 +204,15 @@ def generate_article_category(article_summary, temperature=0.6):
     ]
     result = chat_completion(message_list, temperature=temperature, stream=False)
     msg = result["choices"][0]['message']['content']
-    st.markdown(msg)
     df = pd.read_table(io.StringIO(msg), sep='|')
     df.columns = [x.strip() for x in df.columns]
     category_list = []
     for idx, line in df.iterrows():
-        tag, emoji = line['标签名'], line['Emoji符号']
+        tag = line['标签名']
+        # emoji = line['Emoji符号']
         if '---' in tag:
             continue
-        category_list.append(emoji + ' ' + tag)
-    st.dataframe(df)
+        category_list.append(tag)
     return category_list
 
 
@@ -228,7 +238,7 @@ def generate_title_emoji(article_title, temperature=0.6):
     result = "".join(emojis)
     return result
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600*6)
 def chat_completion(
     message_list,
     model="gpt-3.5-turbo",
@@ -290,17 +300,19 @@ if __name__ == '__main__':
     url = st.text_input("Enter the URL:")
     if url.startswith("https://mp.weixin.qq.com"):
         debug_mode = st.sidebar.checkbox("调试模式", value=False, key="debug_mode")
-        title, content = get_wechat_article(url, mode="simple")
+        title, content, author = get_wechat_article(url, mode="simple")
+        if title is None or content is None:
+            st.stop()
         st.markdown("已获取文章标题：" + title)
         progress_text = "正在解析内容中... 请稍后"
         my_bar = st.progress(0.1, text=progress_text)
         tic = time.time()
         total_tokens = 0
         summary = ""
+        content = content.replace('\t', ' ').replace('\n', ' ').replace('   ', ' ')
         # st.text_area("content", content)
-        for ctc in content.split('\n'):
-            # st.markdown(ctc)
-            # st.write("====>", len(ctc))
+        # st.write(content.split('\n'))
+        for ctc in [content]:
             
             if len(ctc) >= 3000:
                 chunk_num = math.ceil(len(ctc) / 3000)
@@ -317,6 +329,9 @@ if __name__ == '__main__':
                     msg, tokens = paragraph_summary(c, t)
                     summary += msg + '\n'
                     total_tokens += tokens
+
+                    if i >= 5:
+                        break
                 
                 my_bar.progress(0.9, text="正在聚合内容... 请稍后")
                 # aggregate summary
@@ -343,9 +358,14 @@ if __name__ == '__main__':
         st.sidebar.subheader('Summary:')
         st.sidebar.markdown(summary)
 
-        title_emoji = generate_title_emoji(title)
-        st.markdown(title_emoji)
+        # title_emoji = generate_title_emoji(title)
+        # st.markdown(title_emoji)
         article_category = generate_article_category(summary)
-        st.write(article_category)
+
+        cn_words = len(list(filter(lambda w: '\u4e00' <= w <= '\u9fff', content)))
+        en_words = (len(content) - cn_words) / 8
+
+        image = generate_article_image(title, summary, url, article_category, round(cn_words + en_words), author)
+        st.image(image, caption='已生成文章卡片，长按或右键保存')
     else:
         st.write("URL should start with `https://mp.weixin.qq.com`")
