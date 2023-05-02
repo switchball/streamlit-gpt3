@@ -153,19 +153,36 @@ def test(text, temperature):
     total_tokens = result["usage"]["total_tokens"]
     return msg, total_tokens
 
-def test2(text, temperature):
+
+def paragraph_summary(text, temperature=0.1):
     message_list = [
         {"role": "system", "content": ""},
         # {"role": "user", "content": f"TL;dr 总结这段话：{text} 上文总结："},
-        {"role": "user", "content": f"Instruction1=文段内容摘要 Instruction2 =推荐理由 content={text} [abstract, recommendation]="},
+        {"role": "user", "content": f"Instruction1=文段内容摘要 Instruction2 =推荐文段阅读理由 content={text} [abstract, recommendation]="},
         # {"role": "user", "content": f"TL;dr 总结这段话并写一个文章推荐理由：{text} 总结+推荐理由："},
         # {"role": "user", "content": f"Instructions: 以详略得当的方式总结文本内容 Content: {text} Summary:"},
     ]
-    result = chat_completion(message_list, temperature=0.1, stream=True)
-    st.json(result)
+    result = chat_completion(message_list, temperature=temperature, stream=True)
+    # st.json(result)
     msg = result["choices"][0]['message']['content']
     total_tokens = result["usage"]["total_tokens"]
     return msg, total_tokens
+
+
+def aggregate_summary(summary, temperature=0.1):
+    message_list = [
+        {"role": "system", "content": ""},
+        # {"role": "user", "content": f"TL;dr 总结这段话：{text} 上文总结："},
+        {"role": "user", "content": f"Context Source=一些文段内容的总结 Instruction=聚合文段摘要，并给出推荐阅读理由 content={summary} [abstract, recommendation]="},
+        # {"role": "user", "content": f"TL;dr 总结这段话并写一个文章推荐理由：{text} 总结+推荐理由："},
+        # {"role": "user", "content": f"Instructions: 以详略得当的方式总结文本内容 Content: {text} Summary:"},
+    ]
+    result = chat_completion(message_list, temperature=temperature, stream=True)
+    # st.json(result)
+    msg = result["choices"][0]['message']['content']
+    total_tokens = result["usage"]["total_tokens"]
+    return msg, total_tokens
+
 
 @st.cache_data(ttl=3600)
 def chat_completion(
@@ -225,13 +242,14 @@ def chunks(lst, n):
 
 
 if __name__ == '__main__':
-    t = st.number_input("temperature", 0.0, 1.0, value=0.01)
+    t = st.sidebar.number_input("temperature", 0.0, 1.0, value=0.1)
     url = st.text_input("Enter the URL:")
     if url.startswith("https://mp.weixin.qq.com"):
-        title, content = get_wechat_article(url, mode="line")
-        st.write("## " + title)
-        progress_text = "Operation in progress. Please wait."
-        my_bar = st.sidebar.progress(0.0, text=progress_text)
+        debug_mode = st.sidebar.checkbox("调试模式", value=False, key="debug_mode")
+        title, content = get_wechat_article(url, mode="simple")
+        st.markdown("已获取文章标题：" + title)
+        progress_text = "正在解析内容中... 请稍后"
+        my_bar = st.progress(0.1, text=progress_text)
         tic = time.time()
         total_tokens = 0
         summary = ""
@@ -240,28 +258,43 @@ if __name__ == '__main__':
             # st.markdown(ctc)
             # st.write("====>", len(ctc))
             
-            if len(ctc) >= 1500:
-                chunk_num = math.ceil(len(ctc) / 1500)
+            if len(ctc) >= 3000:
+                chunk_num = math.ceil(len(ctc) / 3000)
                 chunk_size = math.ceil(len(ctc) / chunk_num)
                 for i, c in enumerate(chunks(ctc, chunk_size)):
-                    st.markdown(c)
-                    size = len(get_tokenizer().tokenize(c))
-                    st.write(i, "==> len(#) =", len(c), ', len(#tokens) =', size)
+                    if debug_mode:
+                        st.markdown(c)
+                        size = len(get_tokenizer().tokenize(c))
+                        st.write(i, "==> len(#) =", len(c), ', len(#tokens) =', size)
+                        st.markdown("\n\n---\n")
 
-                    my_bar.progress((i+1)/chunk_num, text=progress_text)
+                    my_bar.progress((i+1)/(chunk_num+1), text=progress_text)
 
-                    msg, tokens = test2(c, t)
+                    msg, tokens = paragraph_summary(c, t)
                     summary += msg + '\n'
                     total_tokens += tokens
-                    st.markdown("\n\n---\n")
+                
+                my_bar.progress(0.9, text="正在聚合内容... 请稍后")
+                # aggregate summary
+                agg_summary, tokens = aggregate_summary(summary)
+                total_tokens += tokens
+
+                if debug_mode:
+                    summary = summary + '\n\n --- \n\n' + agg_summary
+                else:
+                    summary = agg_summary
 
             else:
-                st.markdown(ctc)
-                msg, tokens = test2(ctc, t)
+                if debug_mode:
+                    st.markdown(ctc)
+                msg, tokens = paragraph_summary(ctc, t)
                 summary += msg + '\n'
                 total_tokens += tokens
         toc = time.time()
         estimate_rate = total_tokens / (toc - tic) * 60 if toc > tic else 0
+        my_bar.progress(1.0, text=f'解析完成 （耗时`{int(toc-tic)}秒` 共计约`{int(total_tokens/1.845)}字符`）')
+        st.markdown(summary)
+        st.button('生成文章摘要卡片', disabled=True)
         st.sidebar.markdown(f"Rate: `{int(estimate_rate)} tokens/min`, Elapsed: `{int(toc - tic)}` seconds")
         st.sidebar.subheader('Summary:')
         st.sidebar.markdown(summary)
