@@ -6,6 +6,7 @@ import streamlit as st
 import requests
 import math
 import time
+import io
 import re
 import pandas as pd
 import openai
@@ -13,6 +14,7 @@ from bs4 import BeautifulSoup
 from tempfile import NamedTemporaryFile
 from utils.common_resource import get_tokenizer
 from utils.remote_llm import RemoteLLM
+from prompt import get_prompt_by_preset_id
 
 MODEL_END_POINT = st.secrets["MODEL_END_POINT"]
 
@@ -184,6 +186,48 @@ def aggregate_summary(summary, temperature=0.1):
     return msg, total_tokens
 
 
+def generate_article_category(article_summary, temperature=0.6):
+    message_list = [
+        {"role": "system", "content": get_prompt_by_preset_id("给文章打标签 (AI)")},
+        {"role": "user", "content": f"{article_summary}"},
+    ]
+    result = chat_completion(message_list, temperature=temperature, stream=False)
+    msg = result["choices"][0]['message']['content']
+    st.markdown(msg)
+    df = pd.read_table(io.StringIO(msg), sep='|')
+    df.columns = [x.strip() for x in df.columns]
+    category_list = []
+    for idx, line in df.iterrows():
+        tag, emoji = line['标签名'], line['Emoji符号']
+        if '---' in tag:
+            continue
+        category_list.append(emoji + ' ' + tag)
+    st.dataframe(df)
+    return category_list
+
+
+def generate_title_emoji(article_title, temperature=0.6):
+    message_list = [
+        {"role": "system", "content": get_prompt_by_preset_id("标题转emoji (Fun)")},
+        {"role": "user", "content": f"{article_title}"},
+    ]
+    result = chat_completion(message_list, temperature=temperature, stream=False)
+    text = result["choices"][0]['message']['content']
+
+    # return text
+    # 定义正则表达式，匹配所有Emoji字符
+    emoji_pattern = re.compile("["
+        u"\U0001F000-\U0001FAFF"  # 1号平面
+        u"\U00002600-\U000027FF"  # 0号平面
+                           "]+", flags=re.UNICODE)
+
+    # 使用正则表达式提取所有Emoji字符
+    emojis = emoji_pattern.findall(text)
+
+    # 将所有Emoji字符拼接成一个字符串
+    result = "".join(emojis)
+    return result
+
 @st.cache_data(ttl=3600)
 def chat_completion(
     message_list,
@@ -298,5 +342,10 @@ if __name__ == '__main__':
         st.sidebar.markdown(f"Rate: `{int(estimate_rate)} tokens/min`, Elapsed: `{int(toc - tic)}` seconds")
         st.sidebar.subheader('Summary:')
         st.sidebar.markdown(summary)
+
+        title_emoji = generate_title_emoji(title)
+        st.markdown(title_emoji)
+        article_category = generate_article_category(summary)
+        st.write(article_category)
     else:
         st.write("URL should start with `https://mp.weixin.qq.com`")
