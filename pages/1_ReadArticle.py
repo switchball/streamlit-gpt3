@@ -215,12 +215,12 @@ def aggregate_summary(summary_list: list, temperature=0.1):
         return summary_list[0], 0
     num = len(summary_list)
 
-    system_prompt = f"Description=An article is seperated into {num} parts, each of which has been summarized into abstract and recommended readings as follows. "
+    system_prompt = f"Description=An article is seperated into {num} parts equally, each of which has been summarized into abstract and recommended readings as follows. "
     user_prompt = f"Instruction=Extract the abstract and recommended readings from each part, and aggregate them to form a complete article summary and reasons for recommended readings.\n"
     for idx, summary in enumerate(summary_list):
         user_prompt += f'\n[abstract[{idx}], recommendation[{idx}]] = ```{summary}```'
     user_prompt += '\noutput_language=zh-cn'
-    user_prompt += '\n[abstract, recommend reason]='
+    user_prompt += '\nconcluded [abstract, recommend reason] Properly detailed='
 
     message_list = [
         {"role": "system", "content": system_prompt},
