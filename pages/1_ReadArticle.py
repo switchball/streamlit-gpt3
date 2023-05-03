@@ -33,7 +33,7 @@ if 'icc' not in st.session_state:
         st.experimental_rerun()
 
 invite_code_counter = st.session_state['icc']
-invite_code_counter = InviteCodeCounter(st.secrets["mysql"])
+# invite_code_counter = InviteCodeCounter(st.secrets["mysql"])
 
 url_code = st.experimental_get_query_params().get("code", None)
 
