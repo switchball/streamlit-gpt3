@@ -223,7 +223,7 @@ def aggregate_summary(summary_list: list, temperature=0.1):
     user_prompt += '\n[abstract, recommend reason]='
 
     message_list = [
-        {"role": "system", "content": "language=zh-cn"},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
         # {"role": "user", "content": f"Context Source=一些文段内容的总结 Instruction=聚合文段摘要，并给出推荐阅读理由 content={summary} [abstract, recommendation]="},
         # {"role": "user", "content": f"TL;dr 总结这段话并写一个文章推荐理由：{text} 总结+推荐理由："},
