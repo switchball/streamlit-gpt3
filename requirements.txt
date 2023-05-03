@@ -3,3 +3,4 @@ transformers
 plotly
 beautifulsoup4
 qrcode
+mysql-connector-python
