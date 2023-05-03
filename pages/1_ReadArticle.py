@@ -337,7 +337,7 @@ def chunks(lst, n):
 
 
 if __name__ == '__main__':
-    t = st.sidebar.number_input("temperature", 0.0, 1.0, value=0.1)
+    t = st.sidebar.number_input("temperature", 0.0, 1.0, value=0.2, step=0.1)
     url = st.text_input("Enter the URL:")
     if url.startswith("https://mp.weixin.qq.com"):
         debug_mode = st.sidebar.checkbox("调试模式", value=False, key="debug_mode")
