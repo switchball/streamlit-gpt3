@@ -19,7 +19,9 @@ from image import generate_article_image
 from invite import InviteCodeCounter
 
 MODEL_END_POINT = st.secrets["MODEL_END_POINT"]
-AVAILABLE_CODE = {'VIP888': 100}
+
+st.title("阅读小助手")
+st.text("✨一键总结微信公众号文章，并给出阅读建议")
 
 if 'icc' not in st.session_state:
     st.session_state['icc'] = InviteCodeCounter(st.secrets["mysql"])
@@ -246,10 +248,11 @@ def generate_article_category(article_summary, temperature=0.6):
     df = pd.read_table(io.StringIO(msg), sep='|')
     df.columns = [x.strip() for x in df.columns]
     category_list = []
+    tag_col = '标签名' if '标签名' in df.columns else '标签' if '标签' in df.columns else None
+    if tag_col is None:
+        return []
     for idx, line in df.iterrows():
-        if '标签名' not in line:
-            st.write(df)
-        tag = line['标签名']
+        tag = line[tag_col]
         # emoji = line['Emoji符号']
         if '---' in tag:
             continue
@@ -338,7 +341,7 @@ def chunks(lst, n):
 
 if __name__ == '__main__':
     t = st.sidebar.number_input("temperature", 0.0, 1.0, value=0.2, step=0.1)
-    url = st.text_input("Enter the URL:")
+    url = st.text_input("请在下方粘贴文章地址:")
     if url.startswith("https://mp.weixin.qq.com"):
         debug_mode = st.sidebar.checkbox("调试模式", value=False, key="debug_mode")
         title, content, author = get_wechat_article(url, mode="simple")
@@ -409,4 +412,4 @@ if __name__ == '__main__':
         image = generate_article_image(title, summary, url, article_category, round(cn_words + en_words), author)
         st.image(image, caption='已生成文章卡片，长按或右键保存')
     else:
-        st.write("URL should start with `https://mp.weixin.qq.com`")
+        st.markdown("提示：url 格式类似 `https://mp.weixin.qq.com/s/...` ")
