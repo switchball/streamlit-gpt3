@@ -16,13 +16,41 @@ from utils.common_resource import get_tokenizer
 from utils.remote_llm import RemoteLLM
 from prompt import get_prompt_by_preset_id
 from image import generate_article_image
+from invite import InviteCodeCounter
 
 MODEL_END_POINT = st.secrets["MODEL_END_POINT"]
+AVAILABLE_CODE = {'VIP888': 100}
 
-enable_feature = st.experimental_get_query_params().get("feature", None)
-if enable_feature is None or enable_feature[0] == "0":
-    st.warning("该功能正在内测中 ... 敬请期待 ...")
-    st.stop()
+if 'icc' not in st.session_state:
+    st.session_state['icc'] = InviteCodeCounter(st.secrets["mysql"])
+
+invite_code_counter = st.session_state['icc']
+# invite_code_counter = InviteCodeCounter(st.secrets["mysql"])
+
+url_code = st.experimental_get_query_params().get("code", None)
+
+if url_code is None or invite_code_counter.get_remain_times(url_code[0]) == -1:
+    input_code = st.text_input("请输入邀请码", value="").upper()
+    check_disabled = input_code == ""
+    is_checking_code = st.button("确认", disabled=check_disabled)
+    if is_checking_code:
+        if invite_code_counter.get_remain_times(input_code) >= 0:
+            st.success("success")
+            st.balloons()
+            with st.spinner("页面跳转中..."):
+                st.session_state['session_code'] = input_code
+                st.experimental_set_query_params(code=input_code)
+                time.sleep(2)
+                st.experimental_rerun()
+        else:
+            st.warning("该功能正在内测中 ... 邀请码不正确 ...")
+            st.stop()
+    else:
+        st.stop()
+else:
+    # valid code found
+    st.session_state['session_code'] = url_code[0]
+
 
 class Article:
     def __init__(self, url) -> None:
@@ -182,11 +210,22 @@ def paragraph_summary(text, temperature=0.1):
     return msg, total_tokens
 
 
-def aggregate_summary(summary, temperature=0.1):
+def aggregate_summary(summary_list: list, temperature=0.1):
+    if len(summary_list) == 1:
+        return summary_list[0], 0
+    num = len(summary_list)
+
+    system_prompt = f"Description=An article is seperated into {num} parts, each of which has been summarized into abstract and recommended readings as follows. "
+    user_prompt = f"Instruction=Extract the abstract and recommended readings from each part, and aggregate them to form a complete article summary and reasons for recommended readings.\n"
+    for idx, summary in enumerate(summary_list):
+        user_prompt += f'\n[abstract[{idx}], recommendation[{idx}]] = ```{summary}```'
+    user_prompt += '\noutput_language=zh-cn'
+    user_prompt += '\n[abstract, recommend reason]='
+
     message_list = [
-        {"role": "system", "content": ""},
-        # {"role": "user", "content": f"TL;dr 总结这段话：{text} 上文总结："},
-        {"role": "user", "content": f"Context Source=一些文段内容的总结 Instruction=聚合文段摘要，并给出推荐阅读理由 content={summary} [abstract, recommendation]="},
+        {"role": "system", "content": "language=zh-cn"},
+        {"role": "user", "content": user_prompt},
+        # {"role": "user", "content": f"Context Source=一些文段内容的总结 Instruction=聚合文段摘要，并给出推荐阅读理由 content={summary} [abstract, recommendation]="},
         # {"role": "user", "content": f"TL;dr 总结这段话并写一个文章推荐理由：{text} 总结+推荐理由："},
         # {"role": "user", "content": f"Instructions: 以详略得当的方式总结文本内容 Content: {text} Summary:"},
     ]
@@ -319,6 +358,7 @@ if __name__ == '__main__':
             if len(ctc) >= 3000:
                 chunk_num = math.ceil(len(ctc) / 3000)
                 chunk_size = math.ceil(len(ctc) / chunk_num)
+                summary_shards = []
                 for i, c in enumerate(chunks(ctc, chunk_size)):
                     if debug_mode:
                         st.markdown(c)
@@ -326,10 +366,10 @@ if __name__ == '__main__':
                         st.write(i, "==> len(#) =", len(c), ', len(#tokens) =', size)
                         st.markdown("\n\n---\n")
 
-                    my_bar.progress((i+1)/(chunk_num+1), text=progress_text)
+                    my_bar.progress((i+1)/(chunk_num+1), text=progress_text + f" (第 {i+1} / {chunk_num} 部分)")
 
                     msg, tokens = paragraph_summary(c, t)
-                    summary += msg + '\n'
+                    summary_shards.append(msg)
                     total_tokens += tokens
 
                     if i >= 5:
@@ -337,13 +377,12 @@ if __name__ == '__main__':
                 
                 my_bar.progress(0.9, text="正在聚合内容... 请稍后")
                 # aggregate summary
-                agg_summary, tokens = aggregate_summary(summary)
+                agg_summary, tokens = aggregate_summary(summary_shards)
                 total_tokens += tokens
+                summary = agg_summary
 
                 if debug_mode:
-                    summary = summary + '\n\n --- \n\n' + agg_summary
-                else:
-                    summary = agg_summary
+                    st.sidebar.markdown("\n".join(summary_shards) + '\n\n --- \n\n')
 
             else:
                 if debug_mode:
