@@ -27,7 +27,7 @@ if 'icc' not in st.session_state:
     st.session_state['icc'] = InviteCodeCounter(st.secrets["mysql"])
 
 invite_code_counter = st.session_state['icc']
-# invite_code_counter = InviteCodeCounter(st.secrets["mysql"])
+invite_code_counter = InviteCodeCounter(st.secrets["mysql"])
 
 url_code = st.experimental_get_query_params().get("code", None)
 
@@ -51,7 +51,7 @@ if url_code is None or invite_code_counter.get_remain_times(url_code[0]) == -1:
         st.stop()
 else:
     # valid code found
-    st.session_state['session_code'] = url_code[0]
+    st.session_state['session_code'] = url_code[0].upper()
 
 
 class Article:
@@ -411,5 +411,10 @@ if __name__ == '__main__':
 
         image = generate_article_image(title, summary, url, article_category, round(cn_words + en_words), author)
         st.image(image, caption='已生成文章卡片，长按或右键保存')
+
+        if toc - tic > 5:
+            invite_code_counter.use_code(st.session_state['session_code'])
+        
+        # TDOD: add feedback button
     else:
         st.markdown("提示：url 格式类似 `https://mp.weixin.qq.com/s/...` ")
