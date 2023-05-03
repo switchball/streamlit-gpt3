@@ -24,7 +24,13 @@ st.title("阅读小助手")
 st.text("✨一键总结微信公众号文章，并给出阅读建议")
 
 if 'icc' not in st.session_state:
-    st.session_state['icc'] = InviteCodeCounter(st.secrets["mysql"])
+    try:
+        with st.spinner('启动中 ...'):
+            st.session_state['icc'] = InviteCodeCounter(st.secrets["mysql"])
+    except:
+        st.write("网络故障. 3秒后自动重试")
+        time.sleep(3)
+        st.experimental_rerun()
 
 invite_code_counter = st.session_state['icc']
 invite_code_counter = InviteCodeCounter(st.secrets["mysql"])
