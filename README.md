@@ -25,6 +25,12 @@ cd streamlit-gpt3
 pip install -r requirements.txt
 ```
 
+## Prepare your OpenAI key
+
+1. Create a folder named `.streamlit` under repo root
+2. Create a `secrets.toml` file in the `.streamlit` folder
+3. Write a line `OPENAI_API_KEY = "sk-xxxx"` into the config file, so streamlit can load it as `st.secrets`
+
 ## Usage
 
 Run the following command to start the Streamlit app:
