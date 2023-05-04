@@ -18,46 +18,55 @@ from prompt import get_prompt_by_preset_id
 from image import generate_article_image
 from invite import InviteCodeCounter
 
-MODEL_END_POINT = st.secrets["MODEL_END_POINT"]
+MODEL_END_POINT = st.secrets.get("MODEL_END_POINT", "")
 
 st.title("阅读小助手")
 st.text("✨一键总结微信公众号文章，并给出阅读建议")
 
-if 'icc' not in st.session_state:
-    try:
-        with st.spinner('启动中 ...'):
-            st.session_state['icc'] = InviteCodeCounter(st.secrets["mysql"])
-    except:
-        st.write("网络故障. 3秒后自动重试")
-        time.sleep(3)
-        st.experimental_rerun()
 
-invite_code_counter = st.session_state['icc']
-# invite_code_counter = InviteCodeCounter(st.secrets["mysql"])
+def get_invite_code_instance():
+    if 'mysql' not in st.secrets:
+        return None
 
-url_code = st.experimental_get_query_params().get("code", None)
+    if 'icc' not in st.session_state:
+        try:
+            with st.spinner('启动中 ...'):
+                st.session_state['icc'] = InviteCodeCounter(st.secrets["mysql"])
+        except:
+            st.write("网络故障. 3秒后自动重试")
+            time.sleep(3)
+            st.experimental_rerun()
 
-if url_code is None or invite_code_counter.get_remain_times(url_code[0]) == -1:
-    input_code = st.text_input("请输入邀请码", value="").upper()
-    check_disabled = input_code == ""
-    is_checking_code = st.button("确认", disabled=check_disabled)
-    if is_checking_code:
-        if invite_code_counter.get_remain_times(input_code) >= 0:
-            st.success("success")
-            st.balloons()
-            with st.spinner("页面跳转中..."):
-                st.session_state['session_code'] = input_code
-                st.experimental_set_query_params(code=input_code)
-                time.sleep(2)
-                st.experimental_rerun()
+    invite_code_counter = st.session_state['icc']
+    # invite_code_counter = InviteCodeCounter(st.secrets["mysql"])
+
+    url_code = st.experimental_get_query_params().get("code", None)
+
+    if url_code is None or invite_code_counter.get_remain_times(url_code[0]) == -1:
+        input_code = st.text_input("请输入邀请码", value="").upper()
+        check_disabled = input_code == ""
+        is_checking_code = st.button("确认", disabled=check_disabled)
+        if is_checking_code:
+            if invite_code_counter.get_remain_times(input_code) >= 0:
+                st.success("success")
+                st.balloons()
+                with st.spinner("页面跳转中..."):
+                    st.session_state['session_code'] = input_code
+                    st.experimental_set_query_params(code=input_code)
+                    time.sleep(2)
+                    st.experimental_rerun()
+            else:
+                st.warning("该功能正在内测中 ... 邀请码不正确 ...")
+                st.stop()
         else:
-            st.warning("该功能正在内测中 ... 邀请码不正确 ...")
             st.stop()
     else:
-        st.stop()
-else:
-    # valid code found
-    st.session_state['session_code'] = url_code[0].upper()
+        # valid code found
+        st.session_state['session_code'] = url_code[0].upper()
+    return invite_code_counter
+
+
+invite_code_counter = get_invite_code_instance()
 
 
 class Article:
@@ -418,7 +427,7 @@ if __name__ == '__main__':
         image = generate_article_image(title, summary, url, article_category, round(cn_words + en_words), author)
         st.image(image, caption='已生成文章卡片，长按或右键保存')
 
-        if toc - tic > 5:
+        if toc - tic > 5 and invite_code_counter is not None:
             invite_code_counter.use_code(st.session_state['session_code'])
         
         # TDOD: add feedback button
