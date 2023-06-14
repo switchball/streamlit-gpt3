@@ -44,7 +44,7 @@ def get_token_counter():
 
 
 def wait(delay, reason=""):
-    if delay <= 5:
+    if delay <= 50:
         return
     end = time.time() + delay
     for t in range(int(delay)):
