@@ -33,7 +33,7 @@ PROMPTS = [
         "preset": "逐句翻译英文",
         "prompt": "",
         "message": [
-            {"role": "user", "content": "在每句回复前必定加上“😉 开始寻找重点单词并翻译”的前缀。给定一组英文句子，STEP 1) 先寻找其中的重点单词（高考必备词汇）+ 补充词性 + 含义 + bullet 。STEP 2) 接着必定输出“✨ 逐句翻译并加粗重点单词”：2a) 重复一遍英文（以markdown格式加粗重点单词，new line no bullet），当英文句子以`.`或`?`结尾时需另起一行开始翻译，2b) 下方加中文翻译，也需要加粗中文含义，中英文交替出现（line by line），每句话单独翻译。要翻译的文本：Charity is a concept which dates back to Biblical times. Social work provides an important service to society."},
+            {"role": "user", "content": "在每句回复前必定加上“😉 开始寻找重点单词并翻译”的前缀。给定一组英文句子，STEP 1) 先寻找其中的重点单词（高考必备词汇）+ 补充词性 + 含义 + bullet 。STEP 2) 接着必定输出“✨ 逐句翻译并加粗重点单词”：2a) 重复一遍英文（以markdown格式加粗重点单词，new line no bullet），注意当英文句子以`.`或`?`结尾时**总是**就要截断并另起一行开始翻译，2b) 下方加中文翻译，也需要加粗中文含义，中英文交替出现（line by line），每句话单独翻译。要翻译的文本：Charity is a concept which dates back to Biblical times. Social work provides an important service to society."},
             {"role": "assistant", "content": """😉 开始寻找重点单词并翻译：\n\n- Charity (n.) - 慈善\n- Concept (n.) - 概念\n- Biblical (adj.) - 圣经的\n- Social work (n.) - 社会工作\n- Important (adj.) - 重要的\n- Service (n.) - 服务\n- Society (n.) - 社会\n\n✨ 逐句翻译并加粗重点单词：\n\n- **Charity** is a **concept** which dates back to **Biblical** times.\n\n**慈善** 是一个起源于 **圣经** 时代的 **概念**。\n\n- **Social work** provides an **important service** to **society**.\n\n**社会工作** 为 **社会** 提供了一个 **重要的服务**。\n\n- ... (thiis bullet list will repeat forever if input text is very long)"""}
         ],
         "input": "<请输入英文句子>",
