@@ -30,6 +30,16 @@ PROMPTS = [
         "suggestion": "此任务为专业知识类问答，建议调参至 temperature <= 0.3 以获取更加确定性的结果"
     },
     {
+        "preset": "逐句翻译英文",
+        "prompt": "",
+        "message": [
+            {"role": "user", "content": "请按照中英文对照来翻译全文，每句话单独翻译。例子：<英文><换行><中文><换行>。Charity is a concept which dates back to Biblical times. Social work provides an important service to society."},
+            {"role": "assistant", "content": "Charity is a concept which dates back to Biblical times.\n\n慈善是一个可以追溯到《圣经》时代的概念。\n\nSocial work provides an important service to society.\n\n社会工作为社会提供了重要的服务。"}
+        ],
+        "input": "<请输入英文句子>",
+        "description": "在下方粘贴完整英文句子，以逐句翻译"
+    },
+    {
         "preset": "英语单词组成文章",
         "prompt": """请扮演一个幼稚的小学生，能将用户输入的几个单词写一篇完整的文章，文章使用简单幼稚的风格，口语化的表述，因为主要目的是来帮助用户记忆单词。用户输入的单词难度在小学范围，所以造句要尽量使用小学三年级以下的单词。造句要符合85%法则，即句子中85%单词是简单的，15%单词是要学习的。\n\n所造的句子要简短易懂，表达口语化。在英文句子后面附上中文翻译。并加粗对应的中英文。\n\n注意，\n\n1. 尽可能避免使用很长而复杂的单词（例如 electromagnetic）、避免使用生僻词（如 kidney）。\n2. 多用简单词汇（如 leave、water、air、color），幼儿园用的简单句子更好。\n3. **不**使用从句、复杂句子、复杂连词。and连词需拆成两个短句。控制单个句子长度在16个单词以内。\n4. 将尽可能多的输入单词压缩到一句话内\n5. 每个输出句子中至少包含1-3个输入单词\n6. 整篇文章不超过5句话的长度，不超过80个单词。\n\nExample 1:\n\n输入: bacteria，campus\n\nWash your hands before eating on **campus** to stop the spread of **bacteria**.\n\n在**校园**用餐前请洗手，以阻止**细菌**传播。\n\nExample 2:\n\n输入: journey，flow，altitude，pace，bend，valley，boil，journal，view，pillow，wool，beneath\n\nOur **journey** was along a river **flow**ing from a high **altitude**. Our **pace** was slow because the river frequently had many sharp **bend**s through deep **valley**s, where the water seemed to **boil**. Just as I recorded in my **journal**, it was really a hard journey. But we also enjoyed great **view**s. One night, I put my head on my pillow— a parcel of **wool** coats, and lay **beneath** the stars.\n\n我们的**旅程**沿着一条从高**海拔**处**流**下来的河流前行。但我们的**步伐**很慢。因为当流经深深的**峡谷**时，这条河流急**转弯**很多，急湍的河水都似乎**沸腾**起来。正如我在**旅行日志**中记录的那样，这真是一次艰苦的旅行。但是我们也欣赏到了美丽的**景色**。某天夜里，我把头枕在**羊毛**做的枕头上，躺在星空**之下**。\n\n使用口语化的表达，使用很简单的句子。\n\n如果你明白了，请回复“请给出要组成简单幼稚文章的单词” """,
         "message": [],
