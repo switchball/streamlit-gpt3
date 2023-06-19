@@ -33,8 +33,8 @@ PROMPTS = [
         "preset": "逐句翻译英文",
         "prompt": "",
         "message": [
-            {"role": "user", "content": "请按照中英文对照来翻译全文，每句话单独翻译。例子：<英文><换行><中文><换行>。Charity is a concept which dates back to Biblical times. Social work provides an important service to society."},
-            {"role": "assistant", "content": "Charity is a concept which dates back to Biblical times.\n\n慈善是一个可以追溯到《圣经》时代的概念。\n\nSocial work provides an important service to society.\n\n社会工作为社会提供了重要的服务。"}
+            {"role": "user", "content": "请按照中英文对照来翻译全文，每句话单独翻译。寻找其中的重点单词（高考必备词汇），用markdown语法加粗英文和对应的中文翻译。格式：<英文><换行><中文><换行>...。要翻译的文本：Charity is a concept which dates back to Biblical times. Social work provides an important service to society."},
+            {"role": "assistant", "content": "**Charity** is a **concept** which dates back to Biblical times.\n**慈善**是一个可以追溯到《圣经》时代的**概念**。\n\n**Social** work provides an important **service** to **society**.\n**社会**工作为**社会**提供了重要的**服务**。"}
         ],
         "input": "<请输入英文句子>",
         "description": "在下方粘贴完整英文句子，以逐句翻译"
