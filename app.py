@@ -131,11 +131,11 @@ def chat_completion(
         return response
 
 # Available Models
-LANGUAGE_MODELS = ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k']
+LANGUAGE_MODELS = ['gpt-3.5-turbo-16k', 'gpt-3.5-turbo']
 CODEX_MODELS = ['code-davinci-002', 'code-cushman-001']
 
 HINT_TEXTS = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
-TOKEN_SAVING_HINT_THRESHOLD = 3000
+TOKEN_SAVING_HINT_THRESHOLD = 6000
 
 # store chat as session state
 DEFAULT_CHAT_TEXT = "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。\n\n"
@@ -433,7 +433,7 @@ with st.form("my_form"):
     with st.sidebar.expander('🧩 模型参数 (Model Parameters)'):
         model_val = st.selectbox("Model", options=LANGUAGE_MODELS, index=0)
         temperature_val = st.slider("Temperature", 0.0, 2.0, 0.8, step=0.05)
-        max_tokens_val = st.select_slider("Max Tokens", options=(256, 512, 1024, 2048), value=1024) 
+        max_tokens_val = st.select_slider("Max Tokens", options=(256, 512, 1024, 2048), value=2048) 
     # Every form must have a submit button.
     submitted = col_btn.form_submit_button("💬")
     if submitted:
