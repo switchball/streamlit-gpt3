@@ -131,7 +131,7 @@ def chat_completion(
         return response
 
 # Available Models
-LANGUAGE_MODELS = ['gpt-3.5-turbo', 'text-davinci-003', 'text-curie-001', 'text-babbage-001', 'text-ada-001']
+LANGUAGE_MODELS = ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k']
 CODEX_MODELS = ['code-davinci-002', 'code-cushman-001']
 
 HINT_TEXTS = ['正在接通电源，请稍等 ...', '正在思考怎么回答，不要着急', '正在努力查询字典内容 ...', '等待对方回复中 ...', '正在激活神经网络 ...', '请稍等']
