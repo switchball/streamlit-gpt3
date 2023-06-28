@@ -428,7 +428,7 @@ with st.form("my_form"):
     dialog_slot_list = None if enable_reverse_order else [st.empty() for _ in range(2 + 2 * len(st.session_state['conv_user']))]
     col_icon, col_text, col_btn = st.columns((1, 10, 2))
     col_icon.markdown(f"""<img src="https://api.dicebear.com/5.x/{"lorelei"}/svg?seed={seed}" alt="avatar" />""", unsafe_allow_html=True)
-    input_text = col_text.text_input("You: ", "", key="input", label_visibility="collapsed")
+    input_text = col_text.text_area("You: ", "", key="input", label_visibility="collapsed", height=150)
 
     with st.sidebar.expander('🧩 模型参数 (Model Parameters)'):
         model_val = st.selectbox("Model", options=LANGUAGE_MODELS, index=0)
