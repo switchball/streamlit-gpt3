@@ -368,7 +368,7 @@ def rollback():
     # 移除最新的一轮对话
     st.session_state['conv_robot'].pop()
     user_input = st.session_state['conv_user'].pop()
-    st.write('robot invoke', user_input)
+    # st.write('robot invoke', user_input)
     st.session_state['input'] = user_input
 
 
@@ -424,6 +424,12 @@ if st.session_state['input_text_state'] and not enbale_conv_reserve:
         st.sidebar.info(f"👆 全文 Token 数 >= {TOKEN_SAVING_HINT_THRESHOLD}，可考虑开启对话压缩功能")
 
 
+if st.button('🗑️  清除所有对话'):
+    st.session_state['input_text_state'] = ''
+    st.session_state['input'] = ''
+    st.session_state.conv_user.clear()
+    st.session_state.conv_robot.clear()
+
 with st.form("my_form"):
     dialog_slot_list = None if enable_reverse_order else [st.empty() for _ in range(2 + 2 * len(st.session_state['conv_user']))]
     col_icon, col_text, col_btn = st.columns((1, 10, 2))
@@ -453,7 +459,7 @@ with st.form("my_form"):
         txt = st.text_area('对话内容', key='input_text_state', height=800)
     tokens = get_tokenizer().tokenize(txt)
     token_number = len(tokens)
-    st.write('全文的 Token 数：', token_number, ' （最大 Token 数：`4096`）')
+    st.write('全文的 Token 数：', token_number, ' （最大 Token 数：`16000`）')
     if submitted:
         st.json(response, expanded=False)
         # st.write("temperature", temperature_val)
