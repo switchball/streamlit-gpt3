@@ -44,7 +44,7 @@ def get_token_counter():
 
 
 def wait(delay, reason=""):
-    if delay <= 50:
+    if delay <= 30:
         return
     end = time.time() + delay
     for t in range(int(delay)):
@@ -239,7 +239,7 @@ def after_submit(current_input, model, temperature, max_tokens, cc_config: Conve
         token_number = cc_config.message_tokens
     else:
         token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
-    x = token_number / 1024
+    x = token_number / 2048
     delay = 2 * x * x - 3
     delay += 2 * x * (max_tokens / 1024 - 1)
     wait(delay, "前方排队中...")
