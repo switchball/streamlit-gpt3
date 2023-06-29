@@ -81,3 +81,5 @@ if __name__ == "__main__":
     st.sidebar.text("1. 当用户修改流程中环节后，重新跑一遍数据集，给出打分\n2. Good/Bad Case 修正：将用例作为梯度反馈回流程中\n"
                     "3. 追踪比较不同流程下的效果，沉淀经验和案例")
     st.__version__
+
+    st.image("https://www.plantuml.com/plantuml/svg/PP7DJiCm48JlVefLxptmSweKLA5I5Ab5KMaUO76srCAnBNi3uktPf35ouJhpsJCUhnDZvA6tIh5XI_28hC_KGHDz7nYUFj4EoCOxE7elL5MLMdF6H51LIWMCRBG9w1WMRQ88jMEA9zIq04pGrk1Z9_BDDRf1nZ5CKqh6lK_iffdPsslsqcb2TliPkRj6jaJT6-eFE90M8D-uFSpulLBIPFamPgoW3TPZ1sE7H3mxkxquhsH9SrxXI7smoAGsJIPov-cm4aLqILdbTKWQfC5ocYQhcQ9enLv5rjvtvlJzBqkytFD0or365JN4eh-9HPjdSfVa5_g2F8uIIu2sdXxgkby3sCFuTqgjHHvw-mC0")
