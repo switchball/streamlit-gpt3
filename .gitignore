@@ -131,3 +131,6 @@ dmypy.json
 # Streamlit
 .streamlit/
 .vscode
+
+# Workspaces
+workspaces/

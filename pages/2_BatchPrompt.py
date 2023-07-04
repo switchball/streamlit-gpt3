@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
 
+from utils.workspace import WorkspaceManager
+
 # 用户界面模块
-def main():
-    st.title("[WIP] Batched Prompt Evaluation Tool")
+def main(name):
+    st.title(f"[WIP] Batched Prompt Evaluation Tool ({name})")
 
     # 上传数据集
     uploaded_file = st.file_uploader("Upload Dataset", type="csv")
@@ -71,7 +73,12 @@ def record_feedback(result, score, feedback):
     pass
 
 if __name__ == "__main__":
-    main()
+    wm_instance = WorkspaceManager.init_workspace('BatchPrompt', default_selection='demo')
+    if wm_instance is None:
+        st.stop()
+    workspace_name = wm_instance.workspace_name
+
+    main(workspace_name)
     st.sidebar.info("""A. 能够批量评估 prompt 效果的工具""")
     st.sidebar.text("拥有以下几大模块：\n1. 用户界面模块(上传数据集)\n2. 数据处理模块(数据清洗,预处理)\n"
                     "3. Prompt 流程模板模块(LLM)\n4. 反馈评分模块(对数据打标)")
