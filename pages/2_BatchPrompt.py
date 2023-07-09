@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from utils.workspace import WorkspaceManager
+from utils.diagram import get_plantuml_diagram
 
 # 用户界面模块
 def main(name):
@@ -73,6 +74,7 @@ def record_feedback(result, score, feedback):
     pass
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="Batch Prompt Tool", layout="wide", initial_sidebar_state="collapsed")
     wm_instance = WorkspaceManager.init_workspace('BatchPrompt', default_selection='demo')
     if wm_instance is None:
         st.stop()
@@ -89,4 +91,43 @@ if __name__ == "__main__":
                     "3. 追踪比较不同流程下的效果，沉淀经验和案例")
     st.__version__
 
-    st.image("https://www.plantuml.com/plantuml/svg/PP7DJiCm48JlVefLxptmSweKLA5I5Ab5KMaUO76srCAnBNi3uktPf35ouJhpsJCUhnDZvA6tIh5XI_28hC_KGHDz7nYUFj4EoCOxE7elL5MLMdF6H51LIWMCRBG9w1WMRQ88jMEA9zIq04pGrk1Z9_BDDRf1nZ5CKqh6lK_iffdPsslsqcb2TliPkRj6jaJT6-eFE90M8D-uFSpulLBIPFamPgoW3TPZ1sE7H3mxkxquhsH9SrxXI7smoAGsJIPov-cm4aLqILdbTKWQfC5ocYQhcQ9enLv5rjvtvlJzBqkytFD0or365JN4eh-9HPjdSfVa5_g2F8uIIu2sdXxgkby3sCFuTqgjHHvw-mC0")
+    col_in, col_process, col_out = st.columns(3)
+    with col_in:
+        with st.expander("输入"):
+            st.text_input("输入")
+    
+    with col_process:
+        with st.expander("预处理"):
+            st.selectbox("处理方式", options=["Basic Chat", "Prompt + QA"])
+    
+    with col_out:
+        with st.expander("输出"):
+            st.text_area("输出结果")
+
+
+    # 测试
+    original_data = """title Batched Prompt Evaluation Tool
+
+== Evaluation Phase ==
+
+participant "User Interface" as UI order 1
+participant "Data Processing" as DP order 2
+participant "Prompt" as LM order 3
+participant "Feedback Recording" as FR order 4
+
+UI -> DP : Upload Dataset
+UI -> LM : Select Prompt Template
+DP -> LM : Process Data
+LM -> FR : Evaluate Results
+
+== Iterate Phase ==
+
+UI -> LM : Modify Prompt Template
+LM -> DP : Re-process Data
+DP -> LM : Re-evaluate Results
+LM -> FR : Generate New Feedback
+FR -> UI : Send Feedback to User
+    """
+    diag_str = st.text_area("Diagram", value=original_data)
+
+    st.image(get_plantuml_diagram(diag_str))
