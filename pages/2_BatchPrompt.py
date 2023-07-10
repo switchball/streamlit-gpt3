@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from utils.workspace import WorkspaceManager
-from utils.diagram import get_plantuml_diagram
+from utils.diagram import get_plantuml_diagram, get_common_diagram
 
 # 用户界面模块
 def main(name):
@@ -90,6 +90,34 @@ if __name__ == "__main__":
     st.sidebar.text("1. 当用户修改流程中环节后，重新跑一遍数据集，给出打分\n2. Good/Bad Case 修正：将用例作为梯度反馈回流程中\n"
                     "3. 追踪比较不同流程下的效果，沉淀经验和案例")
     st.__version__
+
+    # Simple Flow using Blockdiag
+    block_diag_data = """blockdiag {
+        "Input 1,2,3, ..." -> process -> "Output 1,2,3, ...";
+    
+        "Input 1,2,3, ..." [color = "greenyellow"];
+        "process" [color = "pink"];
+        "Output 1,2,3, ..." [color = "orange"];
+    }"""
+
+    st.subheader("基础形式")
+    st.text("基本的数据流：输入 -> 处理函数 -> 输出。当输入是序列时，输出也是序列。")
+    st.text("在这个数据流中，我们可以修改输入，从而影响输出。")
+    st.image(get_common_diagram(block_diag_data, diagram_type="blockdiag"))
+
+    block_diag_data = """blockdiag {
+        "Input 1,2,3, ..." -> process -> "Output 1,2,3, ...";
+        "Input 1,2,3, ..." -> "process(Variant)" -> "Output 1',2',3', ...";
+
+        "Input 1,2,3, ..." [color = "greenyellow"];
+        "process" [color = "pink"];
+        "process(Variant)" [color = "pink"]
+        "Output 1,2,3, ..." [color = "orange"];
+        "Output 1',2',3', ..." [color = "orange"];
+    }"""
+
+    st.text("进阶的情况：处理函数也可能会发生变化，从而改变一整批数据的处理逻辑。")
+    st.image(get_common_diagram(block_diag_data, diagram_type="blockdiag"))
 
     col_in, col_process, col_out = st.columns(3)
     with col_in:
