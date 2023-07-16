@@ -196,12 +196,14 @@ if __name__ == "__main__":
     if gsheet_url.startswith("https://docs.google.com"):
         conn = st.experimental_connection("gsheets", type=GSheetsConnection)
         allData = conn.read(spreadsheet=gsheet_url) #, usecols=[0, 1])
+        _expanded = True
     else:
         allData = None
+        _expanded = False
     
     col_in, col_process, col_out = st.columns(3)
     with col_in:
-        with st.expander("输入"):
+        with st.expander("输入", expanded=_expanded):
             if allData is not None:
                 st.dataframe(process_input_dataframe( allData ))
             else:
