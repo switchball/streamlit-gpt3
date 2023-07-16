@@ -120,15 +120,33 @@ if __name__ == "__main__":
     st.text("进阶的情况：处理函数也可能会发生变化，从而改变一整批数据的处理逻辑。")
     st.image(get_common_diagram(block_diag_data, diagram_type="blockdiag"))
 
+    st.subheader("数据格式")
+    st.markdown("输入(Input): 每组输入会有1个或多个参数，比如以 `input.name`、`input.age` 来表示有name和age两个槽位可供填充")
+    st.markdown("处理(Process): 每个处理过程都可以表示为一个 DAG 有向无环图，图的节点在执行时会带上其上游节点的输出，以及输入的槽位")
+    st.markdown("输出(Output): DAG 的最后一个节点的输出会作为整个流程的输出，如果 DAG 指定了不止一个最后节点，也可能会有多个输出")
+
+    st.subheader("DAG 图的节点")
+    st.markdown("- 最基本的节点是 LLM_Chat：把上游的输入作为 LLM 的提示词，从而得到 LLM 的相应作为输出（i.e. Basic Chat）")
+    st.markdown("- 字符串拼接节点 Str_Tplt：有预留空位的提示词目标，会将输入参数代入（i.e. Prompt + QA）")
+
+
+    st.markdown("---")
+    st.subheader("开始")
+    st.text("输入的内容一般来自数据库（目前支持以 Google Sheet 作为数据库）")
+    gsheet_url = st.text_input("输入gsheet url")
+    if gsheet_url.startswith("https://docs.google.com"):
+        conn = st.experimental_connection("gsheets", type=GSheetsConnection)
+        allData = conn.read(spreadsheet=gsheet_url) #, usecols=[0, 1])
+    else:
+        allData = None
+    
     col_in, col_process, col_out = st.columns(3)
     with col_in:
         with st.expander("输入"):
-            st.text("输入的内容一般来自数据库（目前支持以 Google Sheet 作为数据库）")
-            gsheet_url = st.text_input("输入gsheet url")
-            if gsheet_url.startswith("https://docs.google.com"):
-                conn = st.experimental_connection("gsheets", type=GSheetsConnection)
-                data = conn.read(spreadsheet=gsheet_url) #, usecols=[0, 1])
-                st.dataframe(data)
+            if allData is not None:
+                st.dataframe(allData)
+            else:
+                st.text("No data")
     
     with col_process:
         with st.expander("预处理"):
