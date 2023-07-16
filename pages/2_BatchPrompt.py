@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 
 from utils.workspace import WorkspaceManager
 from utils.diagram import get_plantuml_diagram, get_common_diagram
@@ -122,7 +123,11 @@ if __name__ == "__main__":
     col_in, col_process, col_out = st.columns(3)
     with col_in:
         with st.expander("输入"):
-            st.text_input("输入")
+            gsheet_url = st.text_input("输入gsheet url")
+            if gsheet_url.startwith("https://docs.google.com"):
+                conn = st.experimental_connection("gsheets", type=GSheetsConnection)
+                data = conn.read(spreadsheet=url, usecols=[0, 1])
+                st.dataframe(data)
     
     with col_process:
         with st.expander("预处理"):
