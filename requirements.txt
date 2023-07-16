@@ -4,3 +4,8 @@ plotly
 beautifulsoup4
 qrcode
 mysql-connector-python
+gspread
+gspread-dataframe
+gspread-formatting
+gsheetsdb
+sql-metadata
