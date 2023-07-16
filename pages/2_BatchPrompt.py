@@ -74,6 +74,65 @@ def record_feedback(result, score, feedback):
     # ...
     pass
 
+def process_input_dataframe(df):
+    """
+    将以 'input.' 开头的列名处理为新的列名，并提取 '.' 分割后的内容作为新的列。
+
+    输入：
+    df (pandas.DataFrame): 需要进行处理的DataFrame。
+
+    用法：
+    new_df = process_dataframe(df)
+
+    作用：
+    遍历DataFrame的列，找到以 'input.' 开头的列名，提取 '.' 分割后的内容作为新的列名，并返回处理后的新DataFrame。
+
+    返回结果：
+    pandas.DataFrame: 处理后的新DataFrame。
+
+    示例：
+    >>> import pandas as pd
+    >>> data = {'input.name': ['Alice', 'Bob', 'Charlie'],
+    ...         'input.age': [25, 30, 35],
+    ...         'score': [80, 90, 75]}
+    >>> df = pd.DataFrame(data)
+    >>> new_df = process_dataframe(df)
+    >>> print(new_df)
+          name  age
+    0    Alice   25
+    1      Bob   30
+    2  Charlie   35
+    """
+    new_columns = {}
+    index_counter = {}
+
+    for column in df.columns:
+        if column.lower() == 'input' or column.lower().startswith('input.'):
+            new_column = column.split('.')[-1]
+            if not new_column:
+                new_column = 'input'
+
+            # 处理重复的列名
+            if new_column in new_columns:
+                if new_column not in index_counter:
+                    index_counter[new_column] = 1
+                else:
+                    index_counter[new_column] += 1
+
+                new_column = f"{new_column}_{index_counter[new_column]}"
+
+            new_columns[column] = new_column
+
+    new_df = df.copy()  # 拷贝原始DataFrame
+
+    # 重命名列
+    new_df.rename(columns=new_columns, inplace=True)
+
+    # 保留新列名对应的列
+    new_df = new_df[[col for col in new_df.columns if col in new_columns.values()]]
+
+    return new_df
+
 if __name__ == "__main__":
     st.set_page_config(page_title="Batch Prompt Tool", layout="wide", initial_sidebar_state="collapsed")
     wm_instance = WorkspaceManager.init_workspace('BatchPrompt', default_selection='demo')
@@ -144,7 +203,7 @@ if __name__ == "__main__":
     with col_in:
         with st.expander("输入"):
             if allData is not None:
-                st.dataframe(allData)
+                st.dataframe(process_input_dataframe( allData ))
             else:
                 st.text("No data")
     
