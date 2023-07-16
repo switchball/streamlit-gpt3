@@ -123,10 +123,11 @@ if __name__ == "__main__":
     col_in, col_process, col_out = st.columns(3)
     with col_in:
         with st.expander("输入"):
+            st.text("输入的内容一般来自数据库（目前支持以 Google Sheet 作为数据库）")
             gsheet_url = st.text_input("输入gsheet url")
-            if gsheet_url.startwith("https://docs.google.com"):
+            if gsheet_url.startswith("https://docs.google.com"):
                 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
-                data = conn.read(spreadsheet=url, usecols=[0, 1])
+                data = conn.read(spreadsheet=gsheet_url) #, usecols=[0, 1])
                 st.dataframe(data)
     
     with col_process:
