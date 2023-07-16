@@ -7,5 +7,6 @@ mysql-connector-python
 gspread
 gspread-dataframe
 gspread-formatting
+duckdb
 gsheetsdb
 sql-metadata
