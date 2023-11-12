@@ -8,6 +8,7 @@ aiohttp
 websockets
 websocket-client
 pydantic
+st_click_detector
 gspread
 gspread-dataframe
 gspread-formatting
