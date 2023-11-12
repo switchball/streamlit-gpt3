@@ -249,7 +249,7 @@ def chat_completion(
 
 
 # Available Models
-LANGUAGE_MODELS = ["星火V2.0", "gpt-3.5-turbo-16k", "gpt-3.5-turbo"]
+LANGUAGE_MODELS = ["星火V3.0", "星火V2.0", "gpt-3.5-turbo-16k", "gpt-3.5-turbo"]
 CODEX_MODELS = ["code-davinci-002", "code-cushman-001"]
 
 HINT_TEXTS = [
