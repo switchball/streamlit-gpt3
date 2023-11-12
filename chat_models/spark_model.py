@@ -9,11 +9,11 @@ import hashlib
 import hmac
 import json
 import uuid
-import streamlit as st
 from datetime import datetime
 from enum import Enum
 from time import mktime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
+from typing_extensions import TypedDict
 from urllib.parse import urlencode, urlparse
 from wsgiref.handlers import format_date_time
 
@@ -47,7 +47,11 @@ class SparkMessageStatus(Enum):
     END_RET = 2
 
 
-SparkChatUsageInfo = dict
+class SparkChatUsageInfo(TypedDict):
+    question_tokens: int
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
 
 
 class SparkMsgInfo(BaseModel):
@@ -60,7 +64,7 @@ class SparkMsgInfo(BaseModel):
         default=SparkMessageStatus.FIRST_RET, description="消息状态"
     )
 
-    usage_info: Optional[SparkChatUsageInfo] = Field(default=None, description="消息使用信息")
+    usage_info: SparkChatUsageInfo = Field(default=None, description="消息使用信息")
 
 
 class SparkClient:
@@ -197,11 +201,3 @@ class SparkClient:
             async for chat_resp in ws:
                 spark_msg_info = self._parse_chat_response(chat_resp)
                 yield spark_msg_info
-
-    # 测试中的方法，应该在基类中实现比较好
-    async def chat_completion_async(self, message_list, stream=True):
-        with st.spinner():
-            slot = st.empty()
-            async for msg_info in self.achat(message_list):
-                slot.markdown(self.answer_full_content)
-        return msg_info.msg_content

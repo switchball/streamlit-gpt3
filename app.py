@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from chat_models.spark_model import SparkClient, SparkChatConfig
+from chat_models.spark_model import SparkClient, SparkChatConfig, SparkMsgInfo
 from collect import TokenCounter
 from dialog import message
 from image import conversation2png
@@ -35,7 +35,7 @@ st.markdown(
     """[![GitHub][github_badge]][github_link]\n\n[github_badge]: https://badgen.net/badge/icon/GitHub?icon=github&color=black&label\n[github_link]: https://github.com/switchball/streamlit-gpt3"""
 )
 st_desc_solt = st.empty()
-st_desc_solt.text('在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n点击 "💬" 后，稍等片刻，就会收到来自 GPT-3 的回复')
+st_desc_solt.text('在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n现已支持星火大模型V2.0，服务已内嵌联网搜索、日期查询、天气查询、股票查询、诗词查询、字词理解等功能')
 
 # st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
 # st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
@@ -97,7 +97,6 @@ def completion(
     return response
 
 
-@st.cache_data(ttl=3600)
 def _chat_completion_gpt(
     message_list,
     model="gpt-3.5-turbo",
@@ -153,8 +152,8 @@ def _chat_completion_gpt(
     else:
         return response
 
-
-@st.cache_data(ttl=3600)
+# cannot pickle 'coroutine' object
+# @st.cache_data(ttl=3600)
 async def _chat_completion_spark(
     message_list,
     model="星火V2.0",
@@ -191,12 +190,28 @@ async def _chat_completion_spark(
     )
     with st.spinner(text=f"[星火-{domain}]" + random.choice(HINT_TEXTS)):
         slot = st.empty()
+        msg_info : SparkMsgInfo = None
         async for msg_info in client.achat(message_list):
             slot.markdown(client.answer_full_content)
         answer = msg_info.msg_content
-    return answer
+    st.write(msg_info.usage_info)
+    response = {
+            "choices": [
+                {
+                    "message": {"content": answer, "role": "assistant"},
+                    "finish_reason": "",
+                }
+            ],
+            "usage": {
+                "prompt_tokens": msg_info.usage_info["prompt_tokens"],
+                "completion_tokens": msg_info.usage_info["completion_tokens"],
+                "total_tokens": msg_info.usage_info["total_tokens"]
+            },
+        }
+    return response
 
 
+@st.cache_data(ttl=3600)
 def chat_completion(
     message_list,
     model="gpt-3.5-turbo",
@@ -221,7 +236,7 @@ def chat_completion(
     elif model.startswith("星火"):
         answer = asyncio.run(
             _chat_completion_spark(
-                message_list=st.session_state.messages,
+                message_list=message_list,
                 model=model,
                 temperature=temperature,
                 max_tokens=max_tokens,
@@ -374,7 +389,7 @@ def after_submit(
     st.session_state.input_text_state += current_input
 
     # Queue by prompt length and max_tokens
-    if "gpt" in model:
+    if model in LANGUAGE_MODELS:
         token_number = cc_config.message_tokens
     else:
         token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
@@ -384,7 +399,7 @@ def after_submit(
     wait(delay, "前方排队中...")
 
     # Send text and waiting for respond
-    if "gpt" in model:
+    if model in LANGUAGE_MODELS:
         # Get system prompt + history conversations
         message_list = cc_config.get_message_list()
         # Add current user input
@@ -644,6 +659,7 @@ with st.form("my_form"):
         finish_reason = response["choices"][0].get("finish_reason", "")
         if finish_reason == "length":
             st.sidebar.info("👆 上次输入因长度被截断，可考虑撤回该消息，并调大该参数后重试")
+        st.session_state['usage_total_tokens'] = response["usage"]["total_tokens"]
 
     show_conversation_dialog(
         dialog_slot_list, rollback_fn=rollback, reverse_order=enable_reverse_order
@@ -654,9 +670,14 @@ with st.form("my_form"):
         st.json(st.session_state.conv_robot, expanded=False)
         st.json(st.session_state.conv_user, expanded=False)
         txt = st.text_area("对话内容", key="input_text_state", height=800)
-    tokens = get_tokenizer().tokenize(txt)
-    token_number = len(tokens)
-    st.write("全文的 Token 数：", token_number, " （最大 Token 数：`16000`）")
+    if 'usage_total_tokens' not in st.session_state:
+        tokens = get_tokenizer().tokenize(txt)
+        token_number = len(tokens)
+        st.session_state['usage_total_tokens'] = token_number
+    percent = st.session_state['usage_total_tokens'] / 8192.0
+    st.progress(percent, 
+        text="Total Tokens %: {:.0f}%".format(percent * 100))
+    st.write("全文的 Token 数：", st.session_state['usage_total_tokens'], " （最大 Token 数：`8192`）")
     if submitted:
         st.json(response, expanded=False)
         # st.write("temperature", temperature_val)

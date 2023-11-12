@@ -1,9 +1,12 @@
-openai>=0.27.0
+openai==0.28
 transformers
 plotly
 beautifulsoup4
 qrcode
 mysql-connector-python
+aiohttp
+websockets
+websocket-client
 gspread
 gspread-dataframe
 gspread-formatting

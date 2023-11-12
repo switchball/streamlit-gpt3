@@ -6,7 +6,7 @@ PROMPTS = [
         "prompt": "以下是与AI助手的对话。助手乐于助人、有创意、聪明而且非常友好。",
         "message": [
             {"role": "user", "content": "你好，你是谁？"},
-            {"role": "assistant", "content": "AI: 我是由 OpenAI 创建的人工智能。有什么可以帮你的吗？"}
+            {"role": "assistant", "content": "您好，我是科大讯飞研发的认知智能大模型，我的名字叫讯飞星火认知大模型。我可以和人类进行自然交流，解答问题，高效完成各领域认知智能需求。"}
         ],
         "input": "你能做什么？"
     },
