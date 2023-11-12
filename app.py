@@ -11,6 +11,7 @@ from chat_models.spark_model import SparkClient, SparkChatConfig, SparkMsgInfo
 from collect import TokenCounter
 from dialog import message
 from image import conversation2png
+from juicy import clickable_select
 from prompt import (
     PROMPTS,
     get_description_by_preset_id,
@@ -35,7 +36,7 @@ st.markdown(
     """[![GitHub][github_badge]][github_link]\n\n[github_badge]: https://badgen.net/badge/icon/GitHub?icon=github&color=black&label\n[github_link]: https://github.com/switchball/streamlit-gpt3"""
 )
 st_desc_solt = st.empty()
-st_desc_solt.text('在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n现已支持星火大模型V2.0，服务已内嵌联网搜索、日期查询、天气查询、股票查询、诗词查询、字词理解等功能')
+st_desc_solt.text('在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n现支持星火大模型V2.0，该服务已内嵌联网搜索、日期查询、天气查询、股票查询、诗词查询、字词理解等功能\n已支持星火大模型V3.0，在数学、代码、医疗、教育等场景进行了专项优化')
 
 # st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
 # st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
@@ -249,7 +250,7 @@ def chat_completion(
 
 
 # Available Models
-LANGUAGE_MODELS = ["星火V3.0", "星火V2.0", "gpt-3.5-turbo-16k", "gpt-3.5-turbo"]
+LANGUAGE_MODELS = ["星火V3.0", "星火V2.0", "gpt-3.5-turbo-16k"]
 CODEX_MODELS = ["code-davinci-002", "code-cushman-001"]
 
 HINT_TEXTS = [
@@ -615,6 +616,7 @@ if st.session_state["input_text_state"] and not enbale_conv_reserve:
     if len(tokens) > TOKEN_SAVING_HINT_THRESHOLD:
         st.sidebar.info(f"👆 全文 Token 数 >= {TOKEN_SAVING_HINT_THRESHOLD}，可考虑开启对话压缩功能")
 
+model_val = clickable_select(LANGUAGE_MODELS, label="<b><i>模型选择：</i></b>", index=1)
 
 if st.button("🗑️  清除所有对话"):
     st.session_state["input_text_state"] = ""
@@ -638,7 +640,8 @@ with st.form("my_form"):
     )
 
     with st.sidebar.expander("🧩 模型参数 (Model Parameters)"):
-        model_val = st.selectbox("Model", options=LANGUAGE_MODELS, index=0)
+        # moved to upper
+        # model_val = st.selectbox("Model", options=LANGUAGE_MODELS, index=0)
         temperature_val = st.slider("Temperature", 0.0, 2.0, 0.8, step=0.05)
         max_tokens_val = st.select_slider(
             "Max Tokens", options=(256, 512, 1024, 2048), value=2048
