@@ -192,7 +192,7 @@ async def _chat_completion_spark(
     with st.spinner(text=f"[星火-{domain}]" + random.choice(HINT_TEXTS)):
         slot = st.empty()
         msg_info : SparkMsgInfo = None
-        async for msg_info in client.achat(message_list):
+        async for msg_info in client.aiohttp_chat(message_list):
             slot.markdown(client.answer_full_content)
         answer = msg_info.msg_content
     st.write(msg_info.usage_info)

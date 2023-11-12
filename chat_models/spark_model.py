@@ -186,7 +186,7 @@ class SparkClient:
         sign_url = self.get_sign_url()
 
         async with aiohttp.ClientSession() as session:
-            async with session.ws_connect(sign_url) as ws:
+            async with session.ws_connect(sign_url, timeout=30) as ws:
                 await ws.send_str(chat_params)
                 async for chat_resp in ws:
                     spark_msg_info = self._parse_chat_response(chat_resp.data)
