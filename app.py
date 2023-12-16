@@ -2,6 +2,7 @@ import random
 import time
 
 import asyncio
+import dashscope
 import openai
 import pandas as pd
 import plotly.express as px
@@ -22,6 +23,7 @@ from share import generate_share_link, restore_from_share_link
 from utils.common_resource import get_tokenizer
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
+dashscope.api_key = st.secrets["Qwen"]["DASHSCOPE_API_KEY"]
 
 
 st.set_page_config(
@@ -36,7 +38,7 @@ st.markdown(
     """[![GitHub][github_badge]][github_link]\n\n[github_badge]: https://badgen.net/badge/icon/GitHub?icon=github&color=black&label\n[github_link]: https://github.com/switchball/streamlit-gpt3"""
 )
 st_desc_solt = st.empty()
-st_desc_solt.text('在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n现支持星火大模型V2.0，该服务已内嵌联网搜索、日期查询、天气查询、股票查询、诗词查询、字词理解等功能\n已支持星火大模型V3.0，在数学、代码、医疗、教育等场景进行了专项优化')
+st_desc_solt.text('在下方文本框输入你的对话 ✨ 支持多轮对话 😉 \n现支持星火大模型V2.0，该服务已内嵌联网搜索、日期查询、天气查询、股票查询、诗词查询、字词理解等功能\n已支持星火大模型V3.0，在数学、代码、医疗、教育等场景进行了专项优化\n已支持阿里通义千问千亿级别超大规模语言模型')
 
 # st.success('GPT-3 非常擅长与人对话，甚至是与自己对话。只需要几行的指示，就可以让 AI 模仿客服聊天机器人的语气进行对话。\n关键在于，需要描述 AI 应该表现成什么样，并且举几个例子。', icon="✅")
 # st.success('看起来很简单，但也有些需要额外注意的地方：\n1. 在开头描述意图，一句话概括 AI 的个性，通常还需要 1~2 个例子，模仿对话的内容。\n2. 给 AI 一个身份(identity)，如果是个在实验室研究的科学家身份，那可能就会得到更有智慧的话。以下是一些可参考的例子', icon="✅")
@@ -212,6 +214,57 @@ async def _chat_completion_spark(
     return response
 
 
+async def _chat_completion_qwen(
+    message_list,
+    model="通义千问-max",
+    temperature=0.9,
+    max_tokens=2048,
+    top_p=0.8,
+    repetition_penalty=1.1,
+):
+    M = dashscope.Generation.Models
+    model_name = M.qwen_plus if model == "通义千问-max-30k" else None
+    if model_name in (M.qwen_max, M.qwen_plus, M.qwen_turbo, 'qwen-max-longcontext'):
+        max_tokens = min(1500, max_tokens)
+    response = dashscope.Generation.call(
+        model_name,
+        messages=message_list,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        top_p=top_p,
+        repetition_penalty=repetition_penalty,
+        result_format='message',  # set the result to be "message" format.
+        stream=True,
+        incremental_output=True
+    )
+    
+    # streaming chat with editable slot
+    with st.spinner(text=f"[通义千问-{model_name}]" + random.choice(HINT_TEXTS)):
+        answer = ""
+        reply_slot = st.empty()
+        for chunk in response:
+            c = chunk["output"]["choices"][0]
+            delta = c.get("message", {}).get("content", "")
+            finish_reason = c.get("finish_reason", "")
+            answer += delta
+            reply_slot.markdown(answer)
+        reply_slot.markdown("")
+    response = {
+        "choices": [
+            {
+                "message": {"content": answer, "role": "assistant"},
+                "finish_reason": finish_reason,
+            }
+        ],
+        "usage": {
+            "prompt_tokens": chunk["usage"]["input_tokens"],
+            "completion_tokens": chunk["usage"]["output_tokens"],
+            "total_tokens": chunk["usage"]["total_tokens"]
+        },
+    }
+    return response
+
+
 @st.cache_data(ttl=3600)
 def chat_completion(
     message_list,
@@ -244,14 +297,30 @@ def chat_completion(
             )
         )
         return answer
+    elif model.startswith("通义千问"):
+        answer = asyncio.run(
+            _chat_completion_qwen(
+                message_list=message_list, 
+                model=model, 
+                temperature=temperature, 
+                max_tokens=max_tokens
+            )
+        )
+        return answer
     else:
         st.error(f"无效的模型输入：{model}")
         st.stop()
 
 
 # Available Models
-LANGUAGE_MODELS = ["星火V3.0", "星火V2.0", "gpt-3.5-turbo-16k"]
+LANGUAGE_MODELS = ["星火V3.0", "星火V2.0", "gpt-3.5-turbo-16k", "通义千问-max-30k"]
 CODEX_MODELS = ["code-davinci-002", "code-cushman-001"]
+MAX_TOKEN_CONFIG = {
+    "星火V3.0": 8192,
+    "星火V2.0": 8192,
+    "gpt-3.5-turbo-16k": 16384,
+    "通义千问-max-30k": 30000
+}
 
 HINT_TEXTS = [
     "正在接通电源，请稍等 ...",
@@ -394,7 +463,7 @@ def after_submit(
         token_number = cc_config.message_tokens
     else:
         token_number = len(get_tokenizer().tokenize(st.session_state.input_text_state))
-    x = token_number / 2048
+    x = token_number / MAX_TOKEN_CONFIG[model] * 3
     delay = 2 * x * x - 3
     delay += 2 * x * (max_tokens / 1024 - 1)
     wait(delay, "前方排队中...")
@@ -616,7 +685,7 @@ if st.session_state["input_text_state"] and not enbale_conv_reserve:
     if len(tokens) > TOKEN_SAVING_HINT_THRESHOLD:
         st.sidebar.info(f"👆 全文 Token 数 >= {TOKEN_SAVING_HINT_THRESHOLD}，可考虑开启对话压缩功能")
 
-model_val = clickable_select(LANGUAGE_MODELS, label="<b><i>模型选择：</i></b>", index=1)
+model_val = clickable_select(LANGUAGE_MODELS, label="<b><i>模型选择：</i></b>", index=3)
 
 if st.button("🗑️  清除所有对话"):
     st.session_state["input_text_state"] = ""
@@ -663,6 +732,7 @@ with st.form("my_form"):
         if finish_reason == "length":
             st.sidebar.info("👆 上次输入因长度被截断，可考虑撤回该消息，并调大该参数后重试")
         st.session_state['usage_total_tokens'] = response["usage"]["total_tokens"]
+        st.json(response["usage"])
 
     show_conversation_dialog(
         dialog_slot_list, rollback_fn=rollback, reverse_order=enable_reverse_order
@@ -677,10 +747,11 @@ with st.form("my_form"):
         tokens = get_tokenizer().tokenize(txt)
         token_number = len(tokens)
         st.session_state['usage_total_tokens'] = token_number
-    percent = st.session_state['usage_total_tokens'] / 8192.0
+    max_token_limit = MAX_TOKEN_CONFIG[model_val]
+    percent = st.session_state['usage_total_tokens'] / max_token_limit
     st.progress(percent, 
         text="Total Tokens %: {:.0f}%".format(percent * 100))
-    st.write("全文的 Token 数：", st.session_state['usage_total_tokens'], " （最大 Token 数：`8192`）")
+    st.write("全文的 Token 数：", st.session_state['usage_total_tokens'], f" （最大 Token 数：`{max_token_limit}`）")
     if submitted:
         st.json(response, expanded=False)
         # st.write("temperature", temperature_val)

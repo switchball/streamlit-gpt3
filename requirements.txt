@@ -15,3 +15,4 @@ gspread-formatting
 duckdb
 gsheetsdb
 sql-metadata
+dashscope
