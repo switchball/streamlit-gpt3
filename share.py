@@ -19,7 +19,7 @@ def generate_share_link():
 
 def restore_from_share_link():
     # Restore from link
-    query = st.experimental_get_query_params()
+    query = st.query_params
     share_key = query.get("share", [""])[0]
     if share_key and ('loaded_from_share' not in st.session_state):
         conversation = _load_conversations(key=share_key)
