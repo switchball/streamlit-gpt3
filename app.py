@@ -512,7 +512,7 @@ def after_submit(
 
 def load_preset_id_from_url_link():
     """Load preset if it is provided in url link"""
-    query = st.experimental_get_query_params()
+    query = st.query_params()
     preset_id = query.get("preset", [""])[0]
     if preset_id:
         for p in PROMPTS:
