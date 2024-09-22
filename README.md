@@ -1,52 +1,66 @@
 # streamlit-gpt3
-[![Open in Streamlit][share_badge]][share_link] [![GitHub][github_badge]][github_link]
+[![在 Streamlit 中打开][share_badge]][share_link] [![GitHub][github_badge]][github_link]
 
-Streamlit-GPT3 is a web-based preview tool interface created using Streamlit. This tool offers  several Q&amp;A task, provided by OpenAI GPT3 API.
+Streamlit-GPT3 是一个基于 Streamlit 创建的网页预览工具界面。此工具通过 OpenAI 的 GPT3 API 提供多种问答任务。
 
-## Features
+## 特性
 
-* **Preset Identities** - Select from various preset identities to generate text with a specific persona. You can also customize the prompt and get example dialogues.
-* **Conversation Response** - Input prompts and the AI will respond as if engaged in a conversation.
-* **Parameter Conditions** - Customize the context and output of the generated text by modifying various parameters.
-* **Model Selection** - Choose from a range of GPT-3 models tailored to suit your application.  Default is GPT-3.5-Turbo, davinci-model is also supported.
+* **预设身份** - 从多个预设身份中选择，以特定的人设生成文本。您还可以自定义提示并获取示例对话。
+* **对话回应** - 输入提示，AI 将像进行对话一样作出回应。
+* **参数条件** - 通过修改各种参数来自定义生成文本的上下文和输出。
+* **模型选择** - 从一系列针对不同应用场景优化的 GPT-3 模型中选择，默认使用 Qwen，也支持其他模型。
 
-## Features (Advanced)
-* **Recall Last Message** - You can recall the last message sent to the AI if you would like to edit your question.
-* **Response Editing** - Guide its answers in specific situations. Customize and direct the conversation with the assistant to best fit your needs.
-* **Link Sharing** - Share the generated text with others via a unique link. Also a faster alternative of save/load.
-* **Token Saving** - Reduce token usages by setting the number of conversation, in order to support longer conversations. 
+## 高级特性
+* **回溯最后消息** - 如果需要编辑您的问题，可以回溯最后发送给 AI 的消息。
+* **响应编辑** - 在特定情况下引导其答案。根据需求定制和指导与助手的对话。
+* **链接分享** - 通过唯一链接与他人共享生成的文本。同时提供更快捷的保存/加载方式。
+* **节省 Token** - 通过设置对话轮数来减少 Token 使用量，从而支持更长的对话。
 
-## Installation
+## 安装
 
-To get started, clone the repository and install the required packages:
+开始之前，请克隆仓库并安装所需包：
+
 ```
 git clone https://github.com/switchball/streamlit-gpt3.git
 cd streamlit-gpt3
 pip install -r requirements.txt
 ```
 
-## Prepare your OpenAI key
+根据你使用的模型，准备 Qwen / OpenAI 的密钥
 
-1. Create a folder named `.streamlit` under repo root
-2. Create a `secrets.toml` file in the `.streamlit` folder
-3. Write a line `OPENAI_API_KEY = "sk-xxxx"` into the config file, so streamlit can load it as `st.secrets`
+## 准备您的 Qwen 密钥
 
-## Usage
+1. 在仓库根目录下创建一个名为 `.streamlit` 的文件夹。
+2. 在 `.streamlit` 文件夹内创建一个 `secrets.toml` 文件。
+3. 在配置文件中写入如下，其中 DASH_API_KEY 的获取可参考 [阿里云官方文档](https://help.aliyun.com/zh/dashscope/developer-reference/acquisition-and-configuration-of-api-key)
+```
+[Qwen]
+DASHSCOPE_API_KEY = "sk-xxx"
+```
 
-Run the following command to start the Streamlit app:
+## 准备您的 OpenAI 密钥
+
+1. 在仓库根目录下创建一个名为 `.streamlit` 的文件夹。
+2. 在 `.streamlit` 文件夹内创建一个 `secrets.toml` 文件。
+3. 在配置文件中写入一行 `OPENAI_API_KEY = "sk-xxxx"`，以便 Streamlit 能够将其加载为 `st.secrets`。
+
+## 使用方法
+
+运行以下命令启动 Streamlit 应用：
 ```
 streamlit run app.py
 ```
 
-Once the app is running, you'll be able to access it by visiting `localhost:8501` in your web browser.
 
-## Contributing
+应用启动后，您可以通过访问浏览器中的 `localhost:8501` 来使用它。
 
-Contributions are welcome! If you would like to contribute to this project, please submit a pull request. 
+## 贡献
 
-## License
+欢迎贡献！如果您希望为此项目做出贡献，请提交拉取请求。
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for more information.
+## 许可证
+
+本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件获取更多信息。
 
 [share_badge]: https://static.streamlit.io/badges/streamlit_badge_black_white.svg
 [share_link]: https://playgpt3.streamlit.app/
